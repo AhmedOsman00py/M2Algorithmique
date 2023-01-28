@@ -6,7 +6,7 @@
 #' @return solution$path is vector of predecessor to each node. we can identify the spanning tree of the graph
 
 #' @description  
-#' The algorithm takes a graph_DataFrame and an initial node and calculates the shortest path from the initial node to every other node in the graph_DataFrame. Find Wikipedia docs.
+#' The algorithm takes a graph_DataFrame and an initial node and calculates the shortest path from the initial node to every other node in the graph_DataFrame.
 #' @examples
 #' wiki_graph_DataFrame <-
 #'  data.frame(v1=c(1,1,1,2,2,2,3,3,3,3,4,4,4,5,5,6,6,6),
