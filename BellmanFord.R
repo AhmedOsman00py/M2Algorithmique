@@ -3,8 +3,8 @@
 # Input : 
 # - vertices : nom des noeuds (vector)
 # - edges : tableau contenant les arcs pondérés (dataframe)
-#   - from : arc allant de (vector)
-#   - to : arc allant vers (vector)
+#   - from : arc sortant (vector)
+#   - to : arc entrant (vector)
 #   - weight : le poid de l'arc (vector)
 # - start : le noeud où on commence (str)
 
