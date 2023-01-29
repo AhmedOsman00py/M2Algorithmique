@@ -20,6 +20,9 @@
 dijkstra <- function(graph_DataFrame, start_node){
   
   #assertions
+  if(is.element(F,graph_DataFrame[[3]] >0)==TRUE){
+    return(cat("\nWarning! - Edge's weight must be postive to apply Dijkstra"))}
+ 
   stopifnot(is.data.frame(graph_DataFrame) && ncol(graph_DataFrame) == 3)
   stopifnot(colnames(graph_DataFrame) == c("v1", "v2", "w"))
   stopifnot(is.numeric(graph_DataFrame[[1]]) && is.numeric(graph_DataFrame[[2]]))
