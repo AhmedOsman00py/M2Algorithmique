@@ -25,13 +25,13 @@ dijkstra <- function(graph_DataFrame, start_node){
  
   stopifnot(is.data.frame(graph_DataFrame) && ncol(graph_DataFrame) == 3)
   stopifnot(colnames(graph_DataFrame) == c("v1", "v2", "w"))
-  stopifnot(is.numeric(graph_DataFrame[[1]]) && is.numeric(graph_DataFrame[[2]]))
-  stopifnot(is.numeric(start_node) && length(start_node) == 1 && is.element(start_node, graph_DataFrame[[1]]))
-  
-  # to make it universal, changing graph_DataFrame nodes to string
-  #graph_DataFrame[ , 1] <- ifelse(is.character(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.character))
-  #graph_DataFrame[ , 2] <- ifelse(is.character(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.character))
-  #startNode <- toString(start_node)
+  stopifnot((is.numeric(graph_DataFrame[[1]]) && is.numeric(graph_DataFrame[[2]]))||(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])))
+  stopifnot((is.numeric(start_node)||is.character(start_node))&& length(start_node) == 1 && is.element(start_node, graph_DataFrame[[1]]))
+
+  # to make it universal, changing graph_DataFrame nodes to numeric
+  graph_DataFrame[ , 1] <- ifelse(is.numeric(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.numeric))
+  graph_DataFrame[ , 2] <- ifelse(is.numeric(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.numeric))
+  startNode <- as.numeric(start_node)
   
   # Vector of nodes to check 
   checkNode <- sort(unique(graph_DataFrame[ ,1]))
@@ -46,7 +46,7 @@ dijkstra <- function(graph_DataFrame, start_node){
   names(distanceNode) <- checkNode
   
   
-  distanceNode[start_node] <- 0
+  distanceNode[startNode] <- 0
   while(length(checkNode) > 0){
     #find node with lowest distance from node to check
     
@@ -94,8 +94,11 @@ plot(g1,edge.label=E(g1)$weight)
 
 ### prepartion of input, we represent g1 as DataFrame
 
-df=data.frame(v1=c(1,2,2,2,4,5,3),v2=c(4,4,3,5,3,3,1),w=c(3,1,4,1,2,4,4))
+df1=data.frame(v1=c(1,2,2,2,4,5,3),v2=c(4,4,3,5,3,3,1),w=c(3,1,4,1,2,4,4))
 
-dijkstra(df,2)
+dijkstra(df1,2)
 
+df2=data.frame(v1=c("1","2",2,"2","4","5","3"),v2=c("4","4","3","5","3","3","1"),w=c(3,1,4,1,2,4,4))
+
+dijkstra(df2,"2)
 
