@@ -29,9 +29,9 @@ dijkstra <- function(graph_DataFrame, start_node){
   stopifnot(is.numeric(start_node) && length(start_node) == 1 && is.element(start_node, graph_DataFrame[[1]]))
   
   # to make it universal, changing graph_DataFrame nodes to string
-  graph_DataFrame[ , 1] <- ifelse(is.character(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.character))
-  graph_DataFrame[ , 2] <- ifelse(is.character(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.character))
-  startNode <- toString(start_node)
+  #graph_DataFrame[ , 1] <- ifelse(is.character(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.character))
+  #graph_DataFrame[ , 2] <- ifelse(is.character(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.character))
+  #startNode <- toString(start_node)
   
   # Vector of nodes to check 
   checkNode <- sort(unique(graph_DataFrame[ ,1]))
@@ -46,7 +46,7 @@ dijkstra <- function(graph_DataFrame, start_node){
   names(distanceNode) <- checkNode
   
   
-  distanceNode[startNode] <- 0
+  distanceNode[start_node] <- 0
   while(length(checkNode) > 0){
     #find node with lowest distance from node to check
     
