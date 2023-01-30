@@ -36,6 +36,6 @@ plot(g,
 
 
 # --- Output 
-# Avec la fonction dijkstra(edges, 3), on doit obtenir :
+# Avec la fonction dijkstra(edges, 3), on obtient le résutat suivant :
 #   distance -> 4 1 0 7 4 9 Inf
 #   parents  -> 2 3 NA 3 2 1 NA
