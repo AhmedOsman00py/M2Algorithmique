@@ -49,7 +49,7 @@ for (node_ in edges$node) {
 
 node_potential_sorted <- node_potential[order(node_potential$node), ]
 
-a_star <- function(graph, heuristic, start, goal) {
+a_star <- function(graph, edges_coords, heuristic, start, goal) {
   #' Finds the shortest distance between two nodes using the A-star (A*) algorithm
   #' @param graph an adjacency-matrix-representation of the graph where (x,y) is the weight of the edge or 0 if there is no edge.
   #' @param heuristic an estimation of distance from node x to y that is guaranteed to be lower than the actual distance. E.g. straight-line distance
@@ -67,7 +67,7 @@ a_star <- function(graph, heuristic, start, goal) {
   priorities = rep(Inf, nrow(graph))
   
   # start node has a priority equal to straight line distance to goal. It will be the first to be expanded.
-  priorities[start] = heuristic(graph, start, goal)
+  priorities[start] = heuristic(edges_coords, start, goal)
   
   # This contains whether a node was already visited
   visited = rep(FALSE, nrow(graph))
@@ -102,7 +102,7 @@ a_star <- function(graph, heuristic, start, goal) {
           # ...save this path as new shortest path
           distances[i] = distances[lowest_priority_index] + graph[lowest_priority_index,i]
           # ...and set the priority with which we should continue with this node
-          priorities[i] = distances[i] + heuristic(graph, i, goal)
+          priorities[i] = distances[i] + heuristic(edges_coords, i, goal)
           cat("Updating distance of node ", i, " to ", distances[i], " and priority to ", priorities[i], "\n")
         }
         # Lastly, note that we are finished with this node.
@@ -116,4 +116,4 @@ a_star <- function(graph, heuristic, start, goal) {
 
 
 # --- tester l'algorithme
-a_star(edges, potential, 3, 6)
+a_star(adj_matrix, edges, potential, 3, 6)
