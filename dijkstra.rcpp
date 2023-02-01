@@ -1,0 +1,52 @@
+#include <Rcpp.h>
+using namespace Rcpp;
+ 
+// [[Rcpp::export]]
+NumericVector dijkstra(NumericMatrix graph, int source) { 
+
+  int n = graph.nrow(); // nombre de sommets dans le graphe 
+  NumericVector dist(n); // vecteur des distances minimales à partir de la source 
+  
+  // Initialisation des distances à l'infini et du premier sommet à 0 
+  std::fill(dist.begin(), dist.end(), R_PosInf);  
+  dist[source] = 0;  
+
+  // Création d'un tableau pour stocker les sommets visités et non visités  
+  std::vector<bool> visited(n);  
+
+  // Boucle principale qui parcourt tous les sommets du graphe  
+  for (int i = 0; i < n; i++) {  
+
+    // Choisir le sommet non visité avec la distance minimale    
+    int u = -1;  
+    int minDist = R_PosInf;  
+
+    for (int j = 0; j < n; j++) {  
+
+      if (!visited[j] && (dist[j] < minDist)) {  
+
+        u = j;  
+        minDist = dist[j];    
+
+      }    
+
+    }    
+
+    // Marquer le sommet choisi comme visité    
+    visited[u] = true;    
+
+    // Mettre à jour les distances des voisins du sommet choisi    
+    for (int v = 0; v < n; v++) {      
+
+      if (!visited[v] && graph(u, v) > 0 && (dist[u] + graph(u, v) < dist[v])) {        
+
+        dist[v] = dist[u] + graph(u, v);      
+
+      }      
+
+    }      
+
+  }      
+
+ return dist;      // Retourne le vecteur des distances minimales à partir de la source     
+}

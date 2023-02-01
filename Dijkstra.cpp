@@ -5,7 +5,7 @@
 using namespace std;
  
 // Nombre de sommets dans le graphe
-#define V 7
+#define V 
  
 // Fonction pour trouver le sommet avec la distance minimale, à partir duquel on peut encore atteindre un autre sommet
 int minDistance(int dist[], bool visited[])
@@ -66,7 +66,7 @@ void dijkstra(int graph[V][V], int src) {     // src est le sommet source.
             printSolution(dist); }      
 
 int main() {
-
+    V
     int graph [V][V]={{4  , 0  ,  0  ,  0  ,  0  ,    5  , 0},
                       {3  , 1  ,  0  ,  10 ,  3  ,   11  , 0},
                       {0  , 1  ,  0  ,  7  ,  0  ,   0   , 0},
