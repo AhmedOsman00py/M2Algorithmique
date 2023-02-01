@@ -103,7 +103,7 @@ a_star <- function(graph, edges_coords, heuristic, start, goal) {
           distances[i] = distances[lowest_priority_index] + graph[lowest_priority_index,i]
           # ...and set the priority with which we should continue with this node
           priorities[i] = distances[i] + heuristic(edges_coords, i, goal)
-          cat("Updating distance of node ", i, " to ", distances[i], " and priority to ", priorities[i], "\n")
+          cat("\nUpdating distance of node ", i, " to ", distances[i], " and priority to ", priorities[i], "\n")
         }
         # Lastly, note that we are finished with this node.
         visited[lowest_priority_index] = TRUE
