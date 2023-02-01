@@ -1,0 +1,10 @@
+Package: shortestPathAlgo
+Type: Package
+Title: shortestPathAlgo package
+Version: 0.1.0
+Author: Bourahima Coulibaly, HIMYCH Omar et Osman Ahmed
+Maintainer: HIMYCH Omar <himychomar@gmail.com>
+Description: shortestPathAlgo provide some algorithm to find the sortest path between two nodes in graph
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
