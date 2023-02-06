@@ -1,6 +1,6 @@
 ---
-title: "Essaie_rcpp"
-author: "Group 2"
+title: "Test avec la version RCPP"
+author: "Dijkstra"
 date: '2023-02-05'
 output: html_document
 ---
@@ -10,12 +10,11 @@ knitr::opts_chunk$set(echo = TRUE)
 library(Rcpp)
 ```
 
-## R Markdown
-`
+## bellmanFord
+
 
 ```{r}
 cppFunction('
-
 Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
 
   int n = adjacencyMatrix.nrow();
@@ -58,57 +57,6 @@ Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
 ```
 
 
-
-
-```{r}
-cppFunction('
-
-Rcpp::List dijkstra1(Rcpp::NumericMatrix adjacencyMatrix, int source, int target) {
-
-  int n = adjacencyMatrix.nrow(); 
-  Rcpp::NumericVector distance(n);
-  std::vector<int> trace(n);
-  
-  std::vector<bool> visited(n); 
-
-  for (int i = 0; i < n; i++) { 
-    distance[i] = adjacencyMatrix(source, i);  
-    trace[i] = source;  
-    visited[i] = false;  
-  }
-
-  distance[source] = 0; 
-
-  for (int i = 0; i < n - 1; i++) {
-
-    int minDistanceIndex = -1;    
-
-    for (int j = 0; j < n; j++) {      
-      if (!visited[j] && (minDistanceIndex == -1 || distance[j] < distance[minDistanceIndex])) {        
-        minDistanceIndex = j;      
-      }    
-    }    
-
-    visited[minDistanceIndex] = true;    
-
-    for (int j = 0; j < n; j++) {      
-      if (!visited[j]) {        
-        if (adjacencyMatrix(minDistanceIndex, j) != -1 && (distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j) < distance[j])) {          
-
-          distance[j] = distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j);          
-          trace[j] = minDistanceIndex;        
-        }      
-      }    
-    }  
-	}  	
-  return Rcpp::List::create(_["distance"]=distance, _["trace"]=trace);
-}
-
-')
-```
-
-
-
 ```{r}
 matriceAdjacence = t(matrix(data = c(0  , 0  ,  0  ,  0  ,  0  ,    5  , 0,
                                    3  , 0  ,  0  ,  10 ,  3  ,   11  , 0,
@@ -126,10 +74,9 @@ matriceAdjacence
 bellmanFord(matriceAdjacence, 2)
 ```
 
+## Dijkstra
 ```{r}
-
 cppFunction('
-
 void dijkstra(NumericMatrix graph, int source, int dest) { 
     int D = dest;
     dest = dest-1;
@@ -223,163 +170,53 @@ void dijkstra(NumericMatrix graph, int source, int dest) {
 ```{r}
 dijkstra(matriceAdjacence, 3, 5)
 ```
-
-
 ```{r}
-
 cppFunction('
 
-Rcpp::List dijkstra(NumericMatrix graph, int source, int dest) { 
-   
-    int V = graph.nrow();
-    source = source - 1;
-    NumericVector dist(V); 
-    LogicalVector visited(V); 
-    
-    for (int i = 0; i < V; i++) { 
-        dist[i] = INT_MAX; 
-        visited[i] = false;  
+Rcpp::List dijkstra1(Rcpp::NumericMatrix adjacencyMatrix, int source, int target) {
+
+  int n = adjacencyMatrix.nrow(); 
+  Rcpp::NumericVector distance(n);
+  std::vector<int> trace(n);
+  
+  std::vector<bool> visited(n); 
+
+  for (int i = 0; i < n; i++) { 
+    distance[i] = adjacencyMatrix(source, i);  
+    trace[i] = source;  
+    visited[i] = false;  
+  }
+
+  distance[source] = 0; 
+
+  for (int i = 0; i < n - 1; i++) {
+
+    int minDistanceIndex = -1;    
+
+    for (int j = 0; j < n; j++) {      
+      if (!visited[j] && (minDistanceIndex == -1 || distance[j] < distance[minDistanceIndex])) {        
+        minDistanceIndex = j;      
+      }    
+    }    
+
+    visited[minDistanceIndex] = true;    
+
+    for (int j = 0; j < n; j++) {      
+      if (!visited[j]) {        
+        if (adjacencyMatrix(minDistanceIndex, j) != -1 && (distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j) < distance[j])) {          
+
+          distance[j] = distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j);          
+          trace[j] = minDistanceIndex;        
+        }      
+      }    
     }  
-
-    dist[source] = 0;  
-
-    for (int count = 0; count < V - 1; count++) {    
-        int min = INT_MAX, min_index;    
-        
-        for (int v = 0; v < V; v++) {        
-            if (visited[v] == false && dist[v] <= min) {            
-                min = dist[v];            
-                min_index = v;         
-            }     
-        }     
-        visited[min_index] = true;      
-    
-        for (int v = 0; v < V; v++)      {         
-            if (!visited[v] && graph(min_index, v) && dist[min_index] != INT_MAX && dist[min_index]+graph(min_index , v) < dist[v])          {             
-                dist[v] = dist[min_index] + graph(min_index,v);         
-                }      
-        } 
-    }   
-        
-    
-    int D = dest;
-    if(dest!=source and dist[dest]!=INT_MAX){
-        std::vector<int> path ; 
-        path.push_back(dest); 
-        while(dest!=source){ 
-            for(int i=0 ; i<V ; i++){ 
-                if(graph(i,dest) !=0 && dist[dest] - graph(i,dest) == dist[i]){ 
-                    path.push_back(i); 
-                    dest = i ; 
-                    break; 
-                    }
-                } 
-            } 
-   
-    }
-      
-  return Rcpp::List::create( _["Distance"]=dist[D],_["trajet"]=path);
-    
-} 
-
-
-')
-```
-
-```{r}
-cppFunction('
-
-
-void affichage(int source, int dest, Rcpp::NumericVector dist, Rcpp::NumericMatrix graph){
-    int V = dist.size();
-    int D = dest;
-    std::vector<int> path ; 
-    path.push_back(dest); 
-    while(dest!=source){ 
-        for(int i=0 ; i<V ; i++){ 
-            if(graph(i,dest)!=0 && dist[dest] - graph(i,dest) == dist[i]){ 
-                path.push_back(i); 
-                dest = i ; 
-                break; 
-                }
-            } 
-        } 
-    Rcpp::Rcout<<"Le plus court chemin entre "<<source + 1<<" et "<< D+1 <<" est : "; 
-    while (!path.empty()) { 
-        Rcpp::Rcout<<path.back() + 1 <<"  "; 
-        path.pop_back();
-    }
-    Rcpp::Rcout<< " et distant de : "<<dist[D]<<std::endl;
+	}  	
+  return Rcpp::List::create(_["distance"]=distance, _["trace"]=trace);
 }
 
-
-
-
-void Dijkstra(Rcpp::NumericMatrix graph, int source) { 
-    
-    int V = graph.nrow();
-    source = source - 1;
-    
-    Rcpp::NumericVector dist(V); 
-
-      
-    Rcpp::LogicalVector visited(V);  
-
-    
-    for (int i = 0; i < V; i++) { 
-
-        dist[i] = INT_MAX; 
-
-        visited[i] = false;  
-
-    }  
-
-    
-    dist[source] = 0;  
-
-    
-    for (int count = 0; count < V - 1; count++) {    
-
-       
-        int min = INT_MAX, min_index;    
-
-        for (int v = 0; v < V; v++)     {        
-
-            if (visited[v] == false && dist[v] <= min)         {            
-
-                min = dist[v];            
-
-                min_index = v;         
-            }     
-        }     
-       
-        visited[min_index] = true;      
-            
-        for (int v = 0; v < V; v++)      {         
-            if (!visited[v] && graph(min_index,v) && dist[min_index] != INT_MAX && dist[min_index]+graph(min_index,v) < dist[v])          {             
-                dist[v] = dist[min_index] + graph(min_index,v);         
-                }      
-        } 
-    }   
-    
-   
-
-    for(int dest = 0  ; dest <V ; dest++){
-        if(dest!=source and dist[dest]!=INT_MAX){
-            affichage(source,dest, dist, graph);
-        }
-        if(dist[dest] == INT_MAX){
-            Rcpp::Rcout<<"pas de chemin possible entre "<< source + 1 <<" et " << dest + 1 ;
-        }
-    }
-    
-    
-    
-} 
-
-
 ')
-
 ```
+
+
 
 
