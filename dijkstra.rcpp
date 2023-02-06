@@ -2,51 +2,52 @@
 using namespace Rcpp;
  
 // [[Rcpp::export]]
-NumericVector dijkstra(NumericMatrix graph, int source) { 
-
-  int n = graph.nrow(); // nombre de sommets dans le graphe 
-  NumericVector dist(n); // vecteur des distances minimales à partir de la source 
+NumericVector dijkstra(NumericMatrix adjacencyMatrix, int source, int target){
+  int n = adjacencyMatrix.nrow(); // nombre de sommets dans le graphe 
+  NumericVector distance(n); // vecteur des distances à partir de la source 
+  std::vector<int> trace(n); // vecteur de trace pour retracer le chemin le plus court 
   
-  // Initialisation des distances à l'infini et du premier sommet à 0 
-  std::fill(dist.begin(), dist.end(), R_PosInf);  
-  dist[source] = 0;  
+  std::vector<bool> visited(n); // vecteur pour marquer les sommets visités ou non 
 
-  // Création d'un tableau pour stocker les sommets visités et non visités  
-  std::vector<bool> visited(n);  
+  for (int i = 0; i < n; i++) { // initialisation des distances et des traces à partir de la source  
+    distance[i] = adjacencyMatrix(source, i);  
+    trace[i] = source;  
+    visited[i] = false;  
+  }
 
-  // Boucle principale qui parcourt tous les sommets du graphe  
-  for (int i = 0; i < n; i++) {  
+  distance[source] = 0; // la distance à partir de la source est toujours 0  
 
-    // Choisir le sommet non visité avec la distance minimale    
-    int u = -1;  
-    int minDist = R_PosInf;  
+  for (int i = 0; i < n - 1; i++) { // boucle principale pour trouver les distances minimales à partir de la source    
 
-    for (int j = 0; j < n; j++) {  
+    int minDistanceIndex = -1;    
 
-      if (!visited[j] && (dist[j] < minDist)) {  
+    for (int j = 0; j < n; j++) {      
 
-        u = j;  
-        minDist = dist[j];    
+      if (!visited[j] && (minDistanceIndex == -1 || distance[j] < distance[minDistanceIndex])){        
+
+        minDistanceIndex = j;      
 
       }    
 
     }    
 
-    // Marquer le sommet choisi comme visité    
-    visited[u] = true;    
+    visited[minDistanceIndex] = true;    
 
-    // Mettre à jour les distances des voisins du sommet choisi    
-    for (int v = 0; v < n; v++) {      
+    for (int j = 0; j < n; j++) {      
 
-      if (!visited[v] && graph(u, v) > 0 && (dist[u] + graph(u, v) < dist[v])) {        
+      if (!visited[j]) {        
 
-        dist[v] = dist[u] + graph(u, v);      
+        if (adjacencyMatrix(minDistanceIndex, j) != -1 && (distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j) < distance[j])) {          
 
-      }      
+          distance[j] = distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j);          
 
-    }      
+          trace[j] = minDistanceIndex;        
 
-  }      
+        }      
 
- return dist;      // Retourne le vecteur des distances minimales à partir de la source     
+      }    
+
+    }  
+	}  	// fin de l'algorithme dijkstra et retourne la distance et la trace entre les inputs donnés  	
+    return Rcpp::List::create(Rcpp::Named("distance")=distance, Rcpp::Named("trace")=trace);
 }

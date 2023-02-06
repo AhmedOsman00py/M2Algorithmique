@@ -77,3 +77,5 @@ int main() {
                  };        
     dijkstra(graph, 2);      
     return 0 ;     }
+
+// Ecrit l'algorithme de Bellman-Ford pour trouver le plus court chemin en Rcpp
