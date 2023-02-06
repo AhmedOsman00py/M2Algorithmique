@@ -99,12 +99,10 @@ for (s in c(1:10)) {
 }
 
 mydata=as.data.frame(simulation.complexity)
-write.csv(mydata,"C:/Users/rachid/Desktop/M2 Data Science/Algorithmique/Dijkstra/mydata.csv")
 mydata_simulation <- data.frame(log_vertex=log(c(1:30)*10),log_time=log(rowMeans(mydata)))
-
 lm_dijkstra=lm(log_time~ log_vertex,data=mydata_simulation)
 
 ggplot(data=mydata_simulation, aes(x=log_vertex, y=log_time)) + geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) + geom_point(shape=17, fill="black", color="darkred", size=3)+
-   stat_smooth(method = "lm",se=F) #+ theme_minimal()
+   stat_smooth(method = "lm",se=F) + theme_minimal()
 
