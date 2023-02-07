@@ -1,0 +1,222 @@
+---
+title: "Test avec la version RCPP"
+author: "Dijkstra"
+date: '2023-02-05'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(Rcpp)
+```
+
+## bellmanFord
+
+
+```{r}
+cppFunction('
+Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
+
+  int n = adjacencyMatrix.nrow();
+ 
+  Rcpp::NumericVector distance(n);
+  Rcpp::IntegerVector predecessor(n);
+
+  for (int i = 0; i < n; i++) {
+    distance[i] = R_PosInf; 
+    predecessor[i] = -1; 
+  }
+
+  distance[source] = 0; 
+
+ 
+  for (int i = 1; i <= n-1; i++) {
+    for (int u = 0; u < n; u++) { 
+      for (int v = 0; v < n; v++) { 
+      
+        if (adjacencyMatrix(u,v) > 0) { 
+
+          double alt = distance[u] + adjacencyMatrix(u,v); 
+
+          if (alt < distance[v]) { 
+            distance[v] = alt;   
+            predecessor[v] = u;  
+          }                      
+
+        }                        
+
+      }                        
+
+    }                        
+
+  }                        
+
+  return Rcpp::List::create(_["distance"]=distance, _["predecessor"]=predecessor);  
+}
+')
+```
+
+
+```{r}
+matriceAdjacence = t(matrix(data = c(0  , 0  ,  0  ,  0  ,  0  ,    5  , 0,
+                                   3  , 0  ,  0  ,  10 ,  3  ,   11  , 0,
+                                   0  , 1  ,  0  ,  7  ,  0  ,   0   , 0,
+                                   0  , 0  ,  0  ,  0  ,   0 ,    0  , 0,
+                                   0  , 0  ,  0  ,  4  ,  0  ,    0  , 0,
+                                   1  , 0  ,  0  ,  0  ,  0  ,    0  , 0,
+                                   5  , 0  ,  0  ,  0  ,  4  ,    0  , 0), nrow  = 7))
+matriceAdjacence
+
+
+```
+
+```{r}
+bellmanFord(matriceAdjacence, 2)
+```
+
+## Dijkstra
+```{r}
+cppFunction('
+void dijkstra(NumericMatrix graph, int source, int dest) { 
+    int D = dest;
+    dest = dest-1;
+    int V = graph.nrow();
+    source = source - 1;
+    
+    NumericVector dist(V); 
+
+      
+    LogicalVector visited(V);  
+
+     
+    for (int i = 0; i < V; i++) { 
+
+        dist[i] = INT_MAX; 
+
+        visited[i] = false;  
+
+    }  
+
+   
+    dist[source] = 0;  
+
+      
+
+    for (int count = 0; count < V - 1; count++) {    
+
+          
+
+        int min = INT_MAX, min_index;    
+
+        for (int v = 0; v < V; v++)     {        
+
+            if (visited[v] == false && dist[v] <= min)         {            
+
+                min = dist[v];            
+
+                min_index = v;         
+            }     
+        }     
+           
+        visited[min_index] = true;      
+             
+        for (int v = 0; v < V; v++)      {         
+            if (!visited[v] && graph(min_index, v) && dist[min_index] != INT_MAX && dist[min_index]+graph(min_index , v) < dist[v])          {             
+                dist[v] = dist[min_index] + graph(min_index,v);         
+                }      
+        } 
+    }   
+        
+    
+
+   
+    if(dest!=source and dist[dest]!=INT_MAX){
+        std::vector<int> path ; 
+        
+        path.push_back(dest); 
+        while(dest!=source){ 
+            for(int i=0 ; i<V ; i++){ 
+                if(graph(i,dest) !=0 && dist[dest] - graph(i,dest) == dist[i]){ 
+                    path.push_back(i); 
+                    dest = i ; 
+                    break; 
+                    }
+                } 
+        }
+        
+        Rcpp::Rcout<<"Le plus court chemin entre "<<source + 1<<" et "<< D  <<" est : "; 
+        while (!path.empty()) { 
+            Rcpp::Rcout<<path.back() + 1 <<"  "; 
+        
+            path.pop_back();
+        }
+        Rcpp::Rcout<< " et distant de : "<<dist[D]<<std::endl;
+        
+    }
+    if(dist[dest] == INT_MAX){
+        Rcpp::Rcout<<"pas de chemin possible entre "<< source + 1 <<" et " << dest ;
+    }
+    
+    return ;
+    
+    
+    
+} 
+
+')
+```
+
+
+```{r}
+dijkstra(matriceAdjacence, 3, 5)
+```
+```{r}
+cppFunction('
+
+Rcpp::List dijkstra1(Rcpp::NumericMatrix adjacencyMatrix, int source, int target) {
+
+  int n = adjacencyMatrix.nrow(); 
+  Rcpp::NumericVector distance(n);
+  std::vector<int> trace(n);
+  
+  std::vector<bool> visited(n); 
+
+  for (int i = 0; i < n; i++) { 
+    distance[i] = adjacencyMatrix(source, i);  
+    trace[i] = source;  
+    visited[i] = false;  
+  }
+
+  distance[source] = 0; 
+
+  for (int i = 0; i < n - 1; i++) {
+
+    int minDistanceIndex = -1;    
+
+    for (int j = 0; j < n; j++) {      
+      if (!visited[j] && (minDistanceIndex == -1 || distance[j] < distance[minDistanceIndex])) {        
+        minDistanceIndex = j;      
+      }    
+    }    
+
+    visited[minDistanceIndex] = true;    
+
+    for (int j = 0; j < n; j++) {      
+      if (!visited[j]) {        
+        if (adjacencyMatrix(minDistanceIndex, j) != -1 && (distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j) < distance[j])) {          
+
+          distance[j] = distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j);          
+          trace[j] = minDistanceIndex;        
+        }      
+      }    
+    }  
+	}  	
+  return Rcpp::List::create(_["distance"]=distance, _["trace"]=trace);
+}
+
+')
+```
+
+
+
+
