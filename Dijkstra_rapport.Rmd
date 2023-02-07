@@ -1,0 +1,241 @@
+---
+title: "Partie Omar"
+author: "HIMYCH Omar"
+date: "22 janvier 2023"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, #  codes are shown By default
+                      warning = FALSE) # Warnings are not shown 
+                      #message = FALSE, # Messages are not shown 
+                      #cache = TRUE,
+                      #out.width = "90%")  
+```
+
+
+```{r}
+library(igraph)
+```
+
+
+## 1. L'algorithm de Djikstra
+### 1.1 Principe :
+
+Dijkstra est un algorithme utilisé pour trouver le plus court chemin dans un graphe.
+Concrètement, on considère un certain nombre de noeuds et les arêtes entre eux, ainsi que la « longueur » des arêtes (appelée "poids"), l'algorithme construit le chemin le plus court entre le noeud de départ spécifié et tous les autres noeuds. 
+
+Le principe de Dijkstra (greedy algorithm) consiste à examiner itérativement le noeud présentant la plus
+petite distance actuelle par rapport à la source et à mettre à jour tous les voisins
+non encore visités si le chemin vers celui-ci via le noeud actuel est plus court. Les étapes de l'algorithme sont expliquées ci-dessous :
+
+**1.** Initialiser la distance au noeud de départ à 0 et les autres  distances à     l'infini.
+**2.** Labéliser tous les nouds  comme "non visité".
+**3.** Tant que nous n'ayons pas visité tous les nouds :
+       **a.** Trouver le noud avec la distance la plus courte de la source 
+              (pour le   premier essaie, ce sera le noud source lui-même).
+       **b.** Pour tous les nouds voisins que nous n'avons pas encore visités,
+              vérifiez si la plus petite distance actuelle vers ce voisin est plus
+              grande que si nous devions passer par le noud actuel. 
+       **c.** Si c'est le cas, la plus petite distance de ce voisin est mise à jour et
+              correspond à la distance entre la source et le noud actuel plus la
+              distance entre le noud actuel et ce voisin.
+  
+Le pseudocode ci-dessous illustre les étapes de notre algorithme :
+
+
+
+```{r}
+
+dijkstra <- function(graph_DataFrame, start_node){
+
+  #assertions
+
+  if(is.element(F,graph_DataFrame[[3]] >0)==TRUE){
+    return(cat("\nWarning! - Edge's weight must be postive to apply Dijkstra"))}
+
+  stopifnot(is.data.frame(graph_DataFrame) && ncol(graph_DataFrame) == 3)
+  stopifnot(colnames(graph_DataFrame) == c("from", "to", "weight"))
+
+  stopifnot((is.numeric(graph_DataFrame[[1]]) && is.numeric(graph_DataFrame[[2]]))||(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])))
+  stopifnot((is.numeric(start_node)||is.character(start_node))&& length(start_node) == 1 && is.element(start_node, graph_DataFrame[[1]]))
+
+  # to make it universal, changing graph_DataFrame nodes to numeric
+  if(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])==TRUE){
+    graph_DataFrame[ , 1] <- ifelse(is.numeric(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.numeric))
+    graph_DataFrame[ , 2] <- ifelse(is.numeric(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.numeric))
+    start_node <- as.numeric(start_node)
+  }
+
+  # Vector of nodes to check
+  checkNode <- sort(unique(append(graph_DataFrame[ ,1],graph_DataFrame[ ,2])))
+
+  # Vector holds predecessor of each node, o for the start_node and nodes that we ca not
+  # visit from start_node
+
+  parentNode <- rep(NA,length(checkNode))
+
+  # Vector which holds distances to initial node
+  distanceNode<-  rep(Inf, length(checkNode))
+  names(distanceNode) <- checkNode
+
+
+  distanceNode[start_node] <- 0
+  while(length(checkNode) > 0){
+    #find node with lowest distance from node to check
+
+    nodeDistanceToCheck <- distanceNode[names(distanceNode) %in% checkNode]
+    node <- nodeDistanceToCheck[which.min(nodeDistanceToCheck)]
+
+    # extracting edges to be checked
+
+    nodeEdges <- graph_DataFrame[which(graph_DataFrame[ ,1] == names(node)), ]
+
+    # apply distances to distance vector
+
+    if(nrow(nodeEdges) > 0){ # to avoid wells
+
+    for (i in 1:nrow(nodeEdges)) {
+      if(distanceNode[nodeEdges[i, 2]] > node + nodeEdges[i, 3]){
+        distanceNode[nodeEdges[i, 2]] <- node + nodeEdges[i, 3]
+
+        parentNode[as.integer(nodeEdges[i,2])] = as.numeric(names(node))
+
+      }
+     }
+    }
+
+    #removing current node from list of nodes to be checked
+
+    checkNode <- checkNode[ -which(checkNode == names(node))]
+  }
+
+  solution <- list()
+  solution$distance <- unname(distanceNode)
+  solution$path  <- parentNode
+  return(solution)
+}
+
+```
+
+Finalement, le tableau que nous avons utilisé pour garder la trace de la plus courte distance actuelle entre la source et tous les autres nouds contiendra les distances (finales) les plus courtes. En plus, nous gardons la trace de précédesseur de chaque noeud pour reconstruire le chemin.
+
+### 1.2 Exemple :
+
+On cherche le plus court chemin de noeud source 3 à tous les autres dan sle graphe ci dessous:
+```{r}
+vertices <- 1:7
+from_ <- c(3, 3, 2, 2, 2, 2, 6, 1, 7, 7, 5)
+to_   <- c(4, 2, 4, 5, 6, 1, 1, 6, 1, 5, 4)  
+# --- Input avec Data Frame
+edges <- data.frame(from   = from_,
+                    to     = to_,
+                    weight = c(7, 1, 10, 3, 11, 3, 1, 5, 5, 4, 4)) 
+# --- pour le graph
+coords <- matrix(c(2, 2,
+                   4, 0, 
+                   6, 2, 
+                   8, 0, 
+                   6, -2, 
+                   2, -2,
+                   0, 0), byrow = TRUE, ncol = 2)
+g <- graph_from_data_frame(edges, 
+                           directed = TRUE)
+plot(g, 
+     edge.label=E(g)$weight, 
+     edge.label.cex=1, 
+     vertex.size = 25, 
+     edge.arrow.size = 0.5, 
+     layout = coords)
+
+```
+
+Start
+
+* On visite 3 car c'est le minimun au début de l'algo.
+
+  Mise à jour de la distance du noeud 3 à 2
+  Mise à jour de la distance du noeud 3 à 4
+  supprimer 3 des Nouds non visités: [1,2,4,5,6,7]
+  Mise à jour le parent de 2 et 4
+  Distances actuelles les plus petites: [Inf, 1, 0, 7, Inf, Inf,Inf]
+
+* On visite 2 avec la distance actuelle 1 minimale au source.
+  Mise à jour de la distance du noeud 2 à 1
+  Mise à jour de la distance du noeud 2 à 5
+  Mise à jour de la distance du noeud 2 à 6
+  # la distance de 2 à 4 reste la meme pas de relaxation 
+  supprimer 2 des Nouds non visités: [1,4,5,6,7]
+  Mise à jour le parent de 1,5 et 6
+  Distances actuelles les plus petites: [4,1,0,7,4,12,Inf]
+
+* On visite 5 avec la distance actuelle 4 minimale au source.
+  # la distance de 4 à 5 reste la meme pas de relaxation 
+  supprimer 5 des Nouds non visités: [1,4,6,7]
+  Distances actuelles les plus petites: [4,1,0,7,4,12,Inf]
+
+* On visite 1 avec la distance actuelle 4 minimale au source.
+  Mise à jour de la distance du noeud 1 à 6
+  supprimer 1 des Nouds non visités: [4,6,7]
+  Mise à jour le parent de 6
+  Distances actuelles les plus petites: [4,1,0,7,4,9,Inf] 
+
+* On visite 4 avec la distance actuelle 7 minimale au source.
+  # pas de voisins
+  supprimer 4 des Nouds non visités: [6,7]
+  Distances actuelles les plus petites: [4,1,0,7,4,9,Inf]
+  
+* On visite 6 avec la distance actuelle 9 minimale au source.
+  # la distance de 6 à 1 reste la meme pas de relaxation 
+  supprimer 6 des Nouds non visités: [7]
+  Distances actuelles les plus petites: [4,1,0,7,4,9,Inf] 
+  
+* On visite 7 avec la distance actuelle Inf minimale au source.
+  # pas de relaxation
+  supprimer 7 des Nouds non visités: [] 
+  Distances actuelles les plus petites: **[4,1,0,7,4,9,Inf]**
+  
+End
+
+Par conséquence les distances minimales de source à tous les noeuds **[4,1,0,7,4,9,Inf]**. Rétro-propagation permet de construire les chemins.
+Nous vérifions ce résultat par notre algorithme implémenté auparavant.
+ 
+```{r}
+dijkstra(edges,3)
+
+```
+
+### 2.2 Complexité :
+#### a. Min Heaps
+
+Un Min Heap est un arbre binaire complet dans lequel les nœuds enfants ont une valeur plus élevée (moins de priorité) que les nœuds parents, c'est-à-dire que tout chemin de la racine aux nœuds feuilles a un ordre croissant d'éléments. L'image ci dessous illustre un exemple de ce type arbre.
+
+
+
+Les opérations d'insertion et de suppression modifient d'abord le tas pour le rendre conforme à la propriété de forme, en ajoutant ou en retirant de l'extrémité de Heap. Ensuite, la propriété de Heap est restaurée en parcourant le Heap vers le haut ou vers le bas. Les deux opérations prennent un temps $ O(log n) $.
+
+
+#### b. complexité :
+
+Nous avons implimenté l'algorithme Dijkstra en se basant sur Min-heap. La complexité de temps d'exécustion est : $ O((V+E)log V)$ avec  $V$ est le nombre des noeuds et $E$ est le nombre des arrets dans un graphe connectés. En effet,
+
+* Soit G=(V, E,w) un graphe pondéré et représenté comme une liste d'adjacence.
+* La file d'attente prioritaire Q est représentée comme un heap binaire.
+
+1. Il faut un temps $O(V)$ pour construire la file d'attente prioritaire initiale de $V$sommets.
+2. Avec la représentation en liste d'adjacence, tous les sommets du graphe peuvent être traversés en utilisant BFS. Par conséquent, l'itération sur tous les voisins des sommets et la mise à jour de leurs valeurs de dist au cours d'une exécution de l'algorithme prennent $O(E)$ temps.
+3.Le temps nécessaire à chaque itération de la boucle est de $O(V)$, car un sommet est retiré de $Q$ par boucle.
+4.La structure de données du tas binaire nous permet d'extraire-min (enlever le nœud avec la dist minimale) et de mettre à jour un élément (recalculer dist[u]) en $O(logV)$ temps.
+
+5.Par conséquent, la complexité temporelle devient $O(V) + O(Elog|V|) + O(|V|log|V|)$, qui est $O((|E|+|V|)log|V|) = O(|E|log|V|)$.
+
+G un graphe connecté. $E=\frac{(V-1)V}{2}$  donc  E est $O(V^2)$
+on pourra écrire la complexité comme $ O(V^2log(V))$.
+
+
+
+
+
+
