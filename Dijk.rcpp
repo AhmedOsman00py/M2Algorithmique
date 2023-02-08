@@ -90,3 +90,4 @@ void dijkstra(NumericMatrix graph, int source, int dest) {
     
     
 } 
+// Ecrire l'algorithme de Dijkstra qui prend en rentré la matrice d'adjacence et la source et retourne les distances et les predecesseurs sous forme de liste en Rcpp
