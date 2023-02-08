@@ -8,14 +8,79 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(Rcpp)
+library(microbenchmark)
+library(ggplot2)
 ```
+
+# Définition des fonctions
+
 
 ## bellmanFord
 
+#### En R
+```{r}
 
+BellmanFordR <- function(vertices, edges, start) {
+  
+  # intialization
+  n <- length(vertices)
+  distance <- rep(Inf, n)
+  parents <- rep(NA, n)
+  
+  names(distance) <- vertices
+  names(parents) <- vertices
+  distance[start] <- 0
+  
+  # relaxation of the edges
+  for (i in 1:(n-1)) {
+    for (j in 1:(nrow(edges))) {
+      
+      u <- edges$from[j]
+      v <- edges$to[j]
+      w <- edges$weight[j]
+      
+      if (distance[v] > distance[u] + w) {
+        distance[v] <- distance[u] + w
+        parents[v] <- u
+      }
+    }
+  }
+  
+  # checks for negative circles
+  for (k in 1:(nrow(edges))) {
+    
+    u <- edges$from[k]
+    v <- edges$to[k]
+    w <- edges$weight[k]
+    
+    if (distance[v] > distance[u] + w) {
+      # find the negative circle
+      negativeLoop <- c(v, u)
+      for (l in 1:(n-1)) {
+        u <- negativeLoop[1]
+        for (j in 1:(nrow(edges))) {
+          
+          v <- edges$to[j]
+          w <- edges$weight[j]
+          if (v != u) {
+            if (distance[v] > distance[u] + w) {
+              negativeLoop <- c(v, negativeLoop)
+            }
+          }
+        }
+      }
+      cat("\nWarning! - Graph contains a negative-weight cycle!\nThe shortest path will not be efficient!\n")
+    }
+  }
+  return(list(distance = distance, parents = parents))
+}
+
+```
+
+#### En Rcpp
 ```{r}
 cppFunction('
-Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
+Rcpp::List bellmanFordRcpp(Rcpp::NumericMatrix adjacencyMatrix, int source){
 
   int n = adjacencyMatrix.nrow();
  
@@ -50,34 +115,20 @@ Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
     }                        
 
   }                        
-
-  return Rcpp::List::create(_["distance"]=distance, _["predecessor"]=predecessor);  
+  
+  return Rcpp::List::create(_["distance"]=distance, _["predecessor"]=predecessor +1 );  
 }
-')
+'
+)
 ```
 
 
-```{r}
-matriceAdjacence = t(matrix(data = c(0  , 0  ,  0  ,  0  ,  0  ,    5  , 0,
-                                   3  , 0  ,  0  ,  10 ,  3  ,   11  , 0,
-                                   0  , 1  ,  0  ,  7  ,  0  ,   0   , 0,
-                                   0  , 0  ,  0  ,  0  ,   0 ,    0  , 0,
-                                   0  , 0  ,  0  ,  4  ,  0  ,    0  , 0,
-                                   1  , 0  ,  0  ,  0  ,  0  ,    0  , 0,
-                                   5  , 0  ,  0  ,  0  ,  4  ,    0  , 0), nrow  = 7))
-matriceAdjacence
 
-
-```
-
-```{r}
-bellmanFord(matriceAdjacence, 2)
-```
 
 ## Dijkstra
 ```{r}
 cppFunction('
-void dijkstra(NumericMatrix graph, int source, int dest) { 
+void dijkstraRcpp(NumericMatrix graph, int source, int dest) { 
     int D = dest;
     dest = dest-1;
     int V = graph.nrow();
@@ -92,19 +143,12 @@ void dijkstra(NumericMatrix graph, int source, int dest) {
     for (int i = 0; i < V; i++) { 
 
         dist[i] = INT_MAX; 
-
         visited[i] = false;  
-
     }  
-
    
-    dist[source] = 0;  
-
-      
+    dist[source] = 0;       
 
     for (int count = 0; count < V - 1; count++) {    
-
-          
 
         int min = INT_MAX, min_index;    
 
@@ -162,61 +206,215 @@ void dijkstra(NumericMatrix graph, int source, int dest) {
     
     
 } 
-
 ')
 ```
 
 
-```{r}
-dijkstra(matriceAdjacence, 3, 5)
-```
-```{r}
-cppFunction('
+#### En R
 
-Rcpp::List dijkstra1(Rcpp::NumericMatrix adjacencyMatrix, int source, int target) {
+```{r}
+dijkstraR <- function(graph_DataFrame, start_node){
 
-  int n = adjacencyMatrix.nrow(); 
-  Rcpp::NumericVector distance(n);
-  std::vector<int> trace(n);
+  #assertions
+
+  if(is.element(F,graph_DataFrame[[3]] >0)==TRUE){
+    return(cat("\nWarning! - Edge's weight must be postive to apply Dijkstra"))}
+
+  stopifnot(is.data.frame(graph_DataFrame) && ncol(graph_DataFrame) == 3)
+  stopifnot(colnames(graph_DataFrame) == c("from", "to", "weight"))
+
+  stopifnot((is.numeric(graph_DataFrame[[1]]) && is.numeric(graph_DataFrame[[2]]))||(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])))
+  stopifnot((is.numeric(start_node)||is.character(start_node))&& length(start_node) == 1 && is.element(start_node, graph_DataFrame[[1]]))
+
+  # to make it universal, changing graph_DataFrame nodes to numeric
   
-  std::vector<bool> visited(n); 
-
-  for (int i = 0; i < n; i++) { 
-    distance[i] = adjacencyMatrix(source, i);  
-    trace[i] = source;  
-    visited[i] = false;  
+  if(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])==TRUE){
+    graph_DataFrame[ , 1] <- ifelse(is.numeric(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.numeric))
+    graph_DataFrame[ , 2] <- ifelse(is.numeric(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.numeric))
+    start_node <- as.numeric(start_node)
   }
 
-  distance[source] = 0; 
+  # Vector of nodes to check
+  checkNode <- sort(unique(append(graph_DataFrame[ ,1],graph_DataFrame[ ,2])))
 
-  for (int i = 0; i < n - 1; i++) {
+  # Vector holds predecessor of each node, o for the start_node and nodes that we ca not
+  # visit from start_node
 
-    int minDistanceIndex = -1;    
+  parentNode <- rep(NA,length(checkNode))
 
-    for (int j = 0; j < n; j++) {      
-      if (!visited[j] && (minDistanceIndex == -1 || distance[j] < distance[minDistanceIndex])) {        
-        minDistanceIndex = j;      
-      }    
-    }    
+  # Vector which holds distances to initial node
+  
+  distanceNode<-  rep(Inf, length(checkNode))
+  names(distanceNode) <- checkNode
 
-    visited[minDistanceIndex] = true;    
 
-    for (int j = 0; j < n; j++) {      
-      if (!visited[j]) {        
-        if (adjacencyMatrix(minDistanceIndex, j) != -1 && (distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j) < distance[j])) {          
+  distanceNode[start_node] <- 0
+  while(length(checkNode) > 0){
+    #find node with lowest distance from node to check
 
-          distance[j] = distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j);          
-          trace[j] = minDistanceIndex;        
-        }      
-      }    
-    }  
-	}  	
-  return Rcpp::List::create(_["distance"]=distance, _["trace"]=trace);
+    nodeDistanceToCheck <- distanceNode[names(distanceNode) %in% checkNode]
+    node <- nodeDistanceToCheck[which.min(nodeDistanceToCheck)]
+
+    # extracting edges to be checked
+
+    nodeEdges <- graph_DataFrame[which(graph_DataFrame[ ,1] == names(node)), ]
+
+    # apply distances to distance vector
+
+    if(nrow(nodeEdges) > 0){ # to avoid wells
+
+    for (i in 1:nrow(nodeEdges)) {
+      if(distanceNode[nodeEdges[i, 2]] > node + nodeEdges[i, 3]){
+        distanceNode[nodeEdges[i, 2]] <- node + nodeEdges[i, 3]
+
+        parentNode[as.integer(nodeEdges[i,2])] = as.numeric(names(node))
+
+      }
+     }
+    }
+
+    #removing current node from list of nodes to be checked
+
+    checkNode <- checkNode[ -which(checkNode == names(node))]
+  }
+
+  solution <- list()
+  solution$distance <- unname(distanceNode)
+  solution$path  <- parentNode
+  return(solution)
 }
 
+```
+
+#### En Rcpp
+
+
+```{r}
+cppFunction('
+/* [[Rcpp::export]] */
+
+List dijkstraC(NumericMatrix adjacency_matrix, int source) { 
+  
+  int n = adjacency_matrix.nrow();                                            // nombre de sommets 
+  NumericVector distances(n);                                                 // vecteur des distances 
+  IntegerVector predecessors(n);                                              // vecteur des prédécesseurs 
+
+                                                                              // Initialisation des distances et des prédécesseurs 
+  for (int i = 0; i < n; i++) { 
+    distances[i] = INFINITY;                                                   // distance initiale à l infini pour tous les sommets sauf la source  
+    predecessors[i] = -1;                                                     // pas de prédécesseur pour tous les sommets sauf la source  
+  }                                                 
+                                                  
+  distances[source] = 0;                                                      // distance à 0 pour le sommet source  
+
+  std::vector<bool> visited(n, false);                                        // vecteur des sommets visités (initialisés à false)                                        
+  while(true){
+    int min = INT_MAX; // indice du sommet avec la plus petite distance parmi ceux non visités  
+    int min_index = -1;
+    for (int i = 0; i < n; i++) {  
+
+      if (!visited[i] && (distances[i] <= min)) {  
+        
+        min = distances[i] ;  
+        min_index = i;
+      }  
+
+    }  
+    if (min_index == -1) {  
+
+      break;                                                                  // tous les sommets ont déjà ete visités, on sort de la boucle while.    
+
+    } 
+
+    visited[min_index] = true;                                                // on marque le sommet comme visité    
+
+    for (int i = 0; i < n ; i++) {    
+
+      if (!visited[i] && adjacency_matrix(min_index,i) && distances[min_index] != INFINITY && distances[min_index] + adjacency_matrix(min_index,i) < distances[i]) {    
+      
+        distances[i] = distances[min_index] + adjacency_matrix(min_index,i);      
+        predecessors[i] = min_index;
+        
+      }
+    }
+  }
+    return List::create(_["dist"]=distances, _["parent"]=predecessors +1);   
+  }  
 ')
+
 ```
 
 
+
+#### Test des différentes fonctions en R et en Rcpp
+
+
+## Données
+
+```{r}
+graph_DataFrame <-
+  data.frame(from=c("1","6","2","2","2","2","7","7","5","3","3"),
+           to=c("6","1","1","6","5","4","1","5","4","4","2"),
+           weight=c(5,1,3,11,3,10,5,4,4,7,1))
+
+matriceAdjacence = t(matrix(data = c(0  , 0  ,  0  ,  0  ,  0  ,    5  , 0,
+                                   3  , 0  ,  0  ,  10 ,  3  ,   11  , 0,
+                                   0  , 1  ,  0  ,  7  ,  0  ,   0   , 0,
+                                   0  , 0  ,  0  ,  0  ,   0 ,    0  , 0,
+                                   0  , 0  ,  0  ,  4  ,  0  ,    0  , 0,
+                                   1  , 0  ,  0  ,  0  ,  0  ,    0  , 0,
+                                   5  , 0  ,  0  ,  0  ,  4  ,    0  , 0), nrow  = 7))
+matriceAdjacence
+
+```
+
+
+## Compilation
+
+### Bellman Ford
+
+```{r}
+BellmanFordR(c("1", "2", "3", "4", "5", "6", "7"), graph_DataFrame, "3")
+```
+
+
+```{r}
+bellmanFordRcpp(matriceAdjacence, 2)
+```
+
+
+
+### Dijkstra
+
+
+
+```{r}
+dijkstraRcpp(matriceAdjacence, 2, 5)
+```
+
+
+```{r}
+dijkstraC(matriceAdjacence, 2)
+```
+
+```{r}
+dijkstraR(graph_DataFrame,"3")
+```
+
+
+## Benchmark
+
+```{r}
+tm <- microbenchmark(BellmanFordR(c("1", "2", "3", "4", "5", "6", "7"), graph_DataFrame, "3"),
+                     bellmanFordRcpp(matriceAdjacence, 2),
+                     dijkstraC(matriceAdjacence, 2),
+                     dijkstraRcpp(matriceAdjacence, 2, 5),
+                     dijkstraR(graph_DataFrame,"3"))
+```
+
+
+```{r}
+autoplot(tm)
+```
 
 

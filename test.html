@@ -9,11 +9,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Group 2" />
+<meta name="author" content="Dijkstra" />
 
 <meta name="date" content="2023-02-05" />
 
-<title>Essaie_rcpp</title>
+<title>Test avec la version RCPP</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,19 +350,78 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Essaie_rcpp</h1>
-<h4 class="author">Group 2</h4>
+<h1 class="title toc-ignore">Test avec la version RCPP</h1>
+<h4 class="author">Dijkstra</h4>
 <h4 class="date">2023-02-05</h4>
 
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>`</p>
+<div id="définition-des-fonctions" class="section level1">
+<h1>Définition des fonctions</h1>
+<div id="bellmanford" class="section level2">
+<h2>bellmanFord</h2>
+<div id="en-r" class="section level4">
+<h4>En R</h4>
+<pre class="r"><code>BellmanFordR &lt;- function(vertices, edges, start) {
+  
+  # intialization
+  n &lt;- length(vertices)
+  distance &lt;- rep(Inf, n)
+  parents &lt;- rep(NA, n)
+  
+  names(distance) &lt;- vertices
+  names(parents) &lt;- vertices
+  distance[start] &lt;- 0
+  
+  # relaxation of the edges
+  for (i in 1:(n-1)) {
+    for (j in 1:(nrow(edges))) {
+      
+      u &lt;- edges$from[j]
+      v &lt;- edges$to[j]
+      w &lt;- edges$weight[j]
+      
+      if (distance[v] &gt; distance[u] + w) {
+        distance[v] &lt;- distance[u] + w
+        parents[v] &lt;- u
+      }
+    }
+  }
+  
+  # checks for negative circles
+  for (k in 1:(nrow(edges))) {
+    
+    u &lt;- edges$from[k]
+    v &lt;- edges$to[k]
+    w &lt;- edges$weight[k]
+    
+    if (distance[v] &gt; distance[u] + w) {
+      # find the negative circle
+      negativeLoop &lt;- c(v, u)
+      for (l in 1:(n-1)) {
+        u &lt;- negativeLoop[1]
+        for (j in 1:(nrow(edges))) {
+          
+          v &lt;- edges$to[j]
+          w &lt;- edges$weight[j]
+          if (v != u) {
+            if (distance[v] &gt; distance[u] + w) {
+              negativeLoop &lt;- c(v, negativeLoop)
+            }
+          }
+        }
+      }
+      cat(&quot;\nWarning! - Graph contains a negative-weight cycle!\nThe shortest path will not be efficient!\n&quot;)
+    }
+  }
+  return(list(distance = distance, parents = parents))
+}</code></pre>
+</div>
+<div id="en-rcpp" class="section level4">
+<h4>En Rcpp</h4>
 <pre class="r"><code>cppFunction(&#39;
-
-Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
+Rcpp::List bellmanFordRcpp(Rcpp::NumericMatrix adjacencyMatrix, int source){
 
   int n = adjacencyMatrix.nrow();
  
@@ -397,35 +456,17 @@ Rcpp::List bellmanFord(Rcpp::NumericMatrix adjacencyMatrix, int source) {
     }                        
 
   }                        
-
-  return Rcpp::List::create(_[&quot;distance&quot;]=distance, _[&quot;predecessor&quot;]=predecessor);  
+  
+  return Rcpp::List::create(_[&quot;distance&quot;]=distance, _[&quot;predecessor&quot;]=predecessor +1 );  
 }
-&#39;)</code></pre>
-<pre class="r"><code>matriceAdjacence = t(matrix(data = c(0  , 0  ,  0  ,  0  ,  0  ,    5  , 0,
-                                   3  , 0  ,  0  ,  10 ,  3  ,   11  , 0,
-                                   0  , 1  ,  0  ,  7  ,  0  ,   0   , 0,
-                                   0  , 0  ,  0  ,  0  ,   0 ,    0  , 0,
-                                   0  , 0  ,  0  ,  4  ,  0  ,    0  , 0,
-                                   1  , 0  ,  0  ,  0  ,  0  ,    0  , 0,
-                                   5  , 0  ,  0  ,  0  ,  4  ,    0  , 0), nrow  = 7))
-matriceAdjacence</code></pre>
-<pre><code>##      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
-## [1,]    0    0    0    0    0    5    0
-## [2,]    3    0    0   10    3   11    0
-## [3,]    0    1    0    7    0    0    0
-## [4,]    0    0    0    0    0    0    0
-## [5,]    0    0    0    4    0    0    0
-## [6,]    1    0    0    0    0    0    0
-## [7,]    5    0    0    0    4    0    0</code></pre>
-<pre class="r"><code>bellmanFord(matriceAdjacence, 2)</code></pre>
-<pre><code>## $distance
-## [1]   4   1   0   7   4   9 Inf
-## 
-## $predecessor
-## [1]  1  2 -1  2  1  0 -1</code></pre>
+&#39;
+)</code></pre>
+</div>
+</div>
+<div id="dijkstra" class="section level2">
+<h2>Dijkstra</h2>
 <pre class="r"><code>cppFunction(&#39;
-
-void dijkstra(NumericMatrix graph, int source, int dest) { 
+void dijkstraRcpp(NumericMatrix graph, int source, int dest) { 
     int D = dest;
     dest = dest-1;
     int V = graph.nrow();
@@ -440,19 +481,12 @@ void dijkstra(NumericMatrix graph, int source, int dest) {
     for (int i = 0; i &lt; V; i++) { 
 
         dist[i] = INT_MAX; 
-
         visited[i] = false;  
-
     }  
-
    
-    dist[source] = 0;  
-
-      
+    dist[source] = 0;       
 
     for (int count = 0; count &lt; V - 1; count++) {    
-
-          
 
         int min = INT_MAX, min_index;    
 
@@ -510,54 +544,311 @@ void dijkstra(NumericMatrix graph, int source, int dest) {
     
     
 } 
-
 &#39;)</code></pre>
-<pre class="r"><code>dijkstra(matriceAdjacence, 3, 5)</code></pre>
-<pre><code>## Le plus court chemin entre 3 et 5 est : 3  2  5   et distant de : 9</code></pre>
-<pre class="r"><code>cppFunction(&#39;
+<div id="en-r-1" class="section level4">
+<h4>En R</h4>
+<pre class="r"><code>dijkstraR &lt;- function(graph_DataFrame, start_node){
 
-Rcpp::List dijkstra1(Rcpp::NumericMatrix adjacencyMatrix, int source, int target) {
+  #assertions
 
-  int n = adjacencyMatrix.nrow(); 
-  Rcpp::NumericVector distance(n);
-  std::vector&lt;int&gt; trace(n);
+  if(is.element(F,graph_DataFrame[[3]] &gt;0)==TRUE){
+    return(cat(&quot;\nWarning! - Edge&#39;s weight must be postive to apply Dijkstra&quot;))}
+
+  stopifnot(is.data.frame(graph_DataFrame) &amp;&amp; ncol(graph_DataFrame) == 3)
+  stopifnot(colnames(graph_DataFrame) == c(&quot;from&quot;, &quot;to&quot;, &quot;weight&quot;))
+
+  stopifnot((is.numeric(graph_DataFrame[[1]]) &amp;&amp; is.numeric(graph_DataFrame[[2]]))||(is.character(graph_DataFrame[[1]]) &amp;&amp; is.character(graph_DataFrame[[2]])))
+  stopifnot((is.numeric(start_node)||is.character(start_node))&amp;&amp; length(start_node) == 1 &amp;&amp; is.element(start_node, graph_DataFrame[[1]]))
+
+  # to make it universal, changing graph_DataFrame nodes to numeric
   
-  std::vector&lt;bool&gt; visited(n); 
-
-  for (int i = 0; i &lt; n; i++) { 
-    distance[i] = adjacencyMatrix(source, i);  
-    trace[i] = source;  
-    visited[i] = false;  
+  if(is.character(graph_DataFrame[[1]]) &amp;&amp; is.character(graph_DataFrame[[2]])==TRUE){
+    graph_DataFrame[ , 1] &lt;- ifelse(is.numeric(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.numeric))
+    graph_DataFrame[ , 2] &lt;- ifelse(is.numeric(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.numeric))
+    start_node &lt;- as.numeric(start_node)
   }
 
-  distance[source] = 0; 
+  # Vector of nodes to check
+  checkNode &lt;- sort(unique(append(graph_DataFrame[ ,1],graph_DataFrame[ ,2])))
 
-  for (int i = 0; i &lt; n - 1; i++) {
+  # Vector holds predecessor of each node, o for the start_node and nodes that we ca not
+  # visit from start_node
 
-    int minDistanceIndex = -1;    
+  parentNode &lt;- rep(NA,length(checkNode))
 
-    for (int j = 0; j &lt; n; j++) {      
-      if (!visited[j] &amp;&amp; (minDistanceIndex == -1 || distance[j] &lt; distance[minDistanceIndex])) {        
-        minDistanceIndex = j;      
-      }    
-    }    
+  # Vector which holds distances to initial node
+  
+  distanceNode&lt;-  rep(Inf, length(checkNode))
+  names(distanceNode) &lt;- checkNode
 
-    visited[minDistanceIndex] = true;    
 
-    for (int j = 0; j &lt; n; j++) {      
-      if (!visited[j]) {        
-        if (adjacencyMatrix(minDistanceIndex, j) != -1 &amp;&amp; (distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j) &lt; distance[j])) {          
+  distanceNode[start_node] &lt;- 0
+  while(length(checkNode) &gt; 0){
+    #find node with lowest distance from node to check
 
-          distance[j] = distance[minDistanceIndex] + adjacencyMatrix(minDistanceIndex, j);          
-          trace[j] = minDistanceIndex;        
-        }      
-      }    
+    nodeDistanceToCheck &lt;- distanceNode[names(distanceNode) %in% checkNode]
+    node &lt;- nodeDistanceToCheck[which.min(nodeDistanceToCheck)]
+
+    # extracting edges to be checked
+
+    nodeEdges &lt;- graph_DataFrame[which(graph_DataFrame[ ,1] == names(node)), ]
+
+    # apply distances to distance vector
+
+    if(nrow(nodeEdges) &gt; 0){ # to avoid wells
+
+    for (i in 1:nrow(nodeEdges)) {
+      if(distanceNode[nodeEdges[i, 2]] &gt; node + nodeEdges[i, 3]){
+        distanceNode[nodeEdges[i, 2]] &lt;- node + nodeEdges[i, 3]
+
+        parentNode[as.integer(nodeEdges[i,2])] = as.numeric(names(node))
+
+      }
+     }
+    }
+
+    #removing current node from list of nodes to be checked
+
+    checkNode &lt;- checkNode[ -which(checkNode == names(node))]
+  }
+
+  solution &lt;- list()
+  solution$distance &lt;- unname(distanceNode)
+  solution$path  &lt;- parentNode
+  return(solution)
+}</code></pre>
+</div>
+<div id="en-rcpp-1" class="section level4">
+<h4>En Rcpp</h4>
+<pre class="r"><code>cppFunction(&#39;
+/* [[Rcpp::export]] */
+
+List dijkstraC(NumericMatrix adjacency_matrix, int source) { 
+  
+  int n = adjacency_matrix.nrow();                                            // nombre de sommets 
+  NumericVector distances(n);                                                 // vecteur des distances 
+  IntegerVector predecessors(n);                                              // vecteur des prédécesseurs 
+
+                                                                              // Initialisation des distances et des prédécesseurs 
+  for (int i = 0; i &lt; n; i++) { 
+    distances[i] = INFINITY;                                                   // distance initiale à l infini pour tous les sommets sauf la source  
+    predecessors[i] = -1;                                                     // pas de prédécesseur pour tous les sommets sauf la source  
+  }                                                 
+                                                  
+  distances[source] = 0;                                                      // distance à 0 pour le sommet source  
+
+  std::vector&lt;bool&gt; visited(n, false);                                        // vecteur des sommets visités (initialisés à false)                                        
+  while(true){
+    int min = INT_MAX; // indice du sommet avec la plus petite distance parmi ceux non visités  
+    int min_index = -1;
+    for (int i = 0; i &lt; n; i++) {  
+
+      if (!visited[i] &amp;&amp; (distances[i] &lt;= min)) {  
+        
+        min = distances[i] ;  
+        min_index = i;
+      }  
+
     }  
-    }   
-  return Rcpp::List::create(_[&quot;distance&quot;]=distance, _[&quot;trace&quot;]=trace);
-}
+    if (min_index == -1) {  
 
+      break;                                                                  // tous les sommets ont déjà ete visités, on sort de la boucle while.    
+
+    } 
+
+    visited[min_index] = true;                                                // on marque le sommet comme visité    
+
+    for (int i = 0; i &lt; n ; i++) {    
+
+      if (!visited[i] &amp;&amp; adjacency_matrix(min_index,i) &amp;&amp; distances[min_index] != INFINITY &amp;&amp; distances[min_index] + adjacency_matrix(min_index,i) &lt; distances[i]) {    
+      
+        distances[i] = distances[min_index] + adjacency_matrix(min_index,i);      
+        predecessors[i] = min_index;
+        
+      }
+    }
+  }
+    return List::create(_[&quot;dist&quot;]=distances, _[&quot;parent&quot;]=predecessors +1);   
+  }  
 &#39;)</code></pre>
+</div>
+<div id="test-des-différentes-fonctions-en-r-et-en-rcpp" class="section level4">
+<h4>Test des différentes fonctions en R et en Rcpp</h4>
+</div>
+</div>
+<div id="données" class="section level2">
+<h2>Données</h2>
+<pre class="r"><code>graph_DataFrame &lt;-
+  data.frame(from=c(&quot;1&quot;,&quot;6&quot;,&quot;2&quot;,&quot;2&quot;,&quot;2&quot;,&quot;2&quot;,&quot;7&quot;,&quot;7&quot;,&quot;5&quot;,&quot;3&quot;,&quot;3&quot;),
+           to=c(&quot;6&quot;,&quot;1&quot;,&quot;1&quot;,&quot;6&quot;,&quot;5&quot;,&quot;4&quot;,&quot;1&quot;,&quot;5&quot;,&quot;4&quot;,&quot;4&quot;,&quot;2&quot;),
+           weight=c(5,1,3,11,3,10,5,4,4,7,1))
+
+matriceAdjacence = t(matrix(data = c(0  , 0  ,  0  ,  0  ,  0  ,    5  , 0,
+                                   3  , 0  ,  0  ,  10 ,  3  ,   11  , 0,
+                                   0  , 1  ,  0  ,  7  ,  0  ,   0   , 0,
+                                   0  , 0  ,  0  ,  0  ,   0 ,    0  , 0,
+                                   0  , 0  ,  0  ,  4  ,  0  ,    0  , 0,
+                                   1  , 0  ,  0  ,  0  ,  0  ,    0  , 0,
+                                   5  , 0  ,  0  ,  0  ,  4  ,    0  , 0), nrow  = 7))
+matriceAdjacence</code></pre>
+<pre><code>##      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+## [1,]    0    0    0    0    0    5    0
+## [2,]    3    0    0   10    3   11    0
+## [3,]    0    1    0    7    0    0    0
+## [4,]    0    0    0    0    0    0    0
+## [5,]    0    0    0    4    0    0    0
+## [6,]    1    0    0    0    0    0    0
+## [7,]    5    0    0    0    4    0    0</code></pre>
+</div>
+<div id="compilation" class="section level2">
+<h2>Compilation</h2>
+<div id="bellman-ford" class="section level3">
+<h3>Bellman Ford</h3>
+<pre class="r"><code>BellmanFordR(c(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;), graph_DataFrame, &quot;3&quot;)</code></pre>
+<pre><code>## $distance
+##   1   2   3   4   5   6   7 
+##   4   1   0   7   4   9 Inf 
+## 
+## $parents
+##   1   2   3   4   5   6   7 
+## &quot;2&quot; &quot;3&quot;  NA &quot;3&quot; &quot;2&quot; &quot;1&quot;  NA</code></pre>
+<pre class="r"><code>bellmanFordRcpp(matriceAdjacence, 2)</code></pre>
+<pre><code>## $distance
+## [1]   4   1   0   7   4   9 Inf
+## 
+## $predecessor
+## [1] 2 3 0 3 2 1 0</code></pre>
+</div>
+<div id="dijkstra-1" class="section level3">
+<h3>Dijkstra</h3>
+<pre class="r"><code>dijkstraRcpp(matriceAdjacence, 2, 5)</code></pre>
+<pre><code>## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8</code></pre>
+<pre class="r"><code>dijkstraC(matriceAdjacence, 2)</code></pre>
+<pre><code>## $dist
+## [1]   4   1   0   7   4   9 Inf
+## 
+## $parent
+## [1] 2 3 0 3 2 1 0</code></pre>
+<pre class="r"><code>dijkstraR(graph_DataFrame,&quot;3&quot;)</code></pre>
+<pre><code>## $distance
+## [1]   4   1   0   7   4   9 Inf
+## 
+## $path
+## [1]  2  3 NA  3  2  1 NA</code></pre>
+</div>
+</div>
+<div id="benchmark" class="section level2">
+<h2>Benchmark</h2>
+<pre class="r"><code>tm &lt;- microbenchmark(BellmanFordR(c(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;6&quot;, &quot;7&quot;), graph_DataFrame, &quot;3&quot;),
+                     bellmanFordRcpp(matriceAdjacence, 2),
+                     dijkstraC(matriceAdjacence, 2),
+                     dijkstraRcpp(matriceAdjacence, 2, 5),
+                     dijkstraR(graph_DataFrame,&quot;3&quot;))</code></pre>
+<pre><code>## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8
+## Le plus court chemin entre 2 et 5 est : 2  5   et distant de : 8</code></pre>
+<pre class="r"><code>autoplot(tm)</code></pre>
+<pre><code>## Coordinate system already present. Adding new coordinate system, which will
+## replace the existing one.</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /></p>
+</div>
 </div>
 
 
