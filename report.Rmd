@@ -106,6 +106,24 @@ En utilisant la notation de complexité, cela peut être exprimé comme $O(V^2 *
 
 ### Implémentation de l'algorithme
 
+**Pseudo Code**
+
+    procédure BellmanFord(liste de sommets, liste d'arêtes, source)
+       pour tout sommet v dans la liste de sommets
+           si v est égal à la source
+               alors v.distance = 0
+               sinon v.distance = infini
+       pour i de 1 à n-1 où n est le nombre de sommets
+           pour toutes les arêtes (u, v) dans la liste d'arêtes
+               si v.distance > u.distance + poids de l'arête (u, v)
+                   alors v.distance = u.distance + poids de l'arête (u, v)
+       pour toutes les arêtes (u, v) dans la liste d'arêtes
+           si v.distance > u.distance + poids de l'arête (u, v)
+               alors retourner faux
+       retourner vrai
+    fin
+    
+
 ```{r echo=FALSE}
 BellmanFord <- function(vertices, edges, start) {
   
@@ -208,6 +226,21 @@ Le principe de Dijkstra (greedy algorithm) consiste à examiner itérativement l
 - Si c'est le cas, la plus petite distance de ce voisin est mise à jour et correspond à la distance entre la source et le noeud actuel plus la distance entre le noud actuel et ce voisin.
 
 Le pseudo-code ci-dessous illustre les étapes de notre algorithme :
+
+    procédure Dijkstra(liste de sommets, liste d'arêtes, source)
+       initialiser un tas min vide
+       pour tout sommet v dans la liste de sommets
+           si v est égal à la source
+               alors v.distance = 0
+               sinon v.distance = infini
+               ajouter v au tas min
+       tant que le tas min n'est pas vide
+           extraire le sommet u avec la distance minimale du tas min
+           pour tout voisin v de u
+               si v.distance > u.distance + poids de l'arête (u, v)
+                   alors v.distance = u.distance + poids de l'arête (u, v)
+                   mettre à jour v dans le tas min
+    fin
 
 ```{r, echo=FALSE}
 dijkstra <- function(graph_DataFrame, start_node){
