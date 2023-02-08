@@ -1,0 +1,4 @@
+BellmanFord             BellmanFord naif Algorithm to find shortest
+                        path from a node to others
+dijkstra                Dijkstra's algorithm, finds shortest distance
+                        to other nodes

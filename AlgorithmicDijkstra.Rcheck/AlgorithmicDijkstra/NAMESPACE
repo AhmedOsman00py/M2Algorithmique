@@ -1,0 +1,5 @@
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp,evalCpp)
+useDynLib(AlgorithmicDijkstra, .registration = TRUE)
+importFrom(GIGrvg,rgig)
+importFrom(RcppParallel, RcppParallelLibs)

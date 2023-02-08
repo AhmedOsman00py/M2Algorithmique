@@ -1,0 +1,29 @@
+* installing *source* package 'AlgorithmicDijkstra' ...
+** using staged installation
+** libs
+g++ -std=gnu++11  -I"C:/PROGRA~1/R/R-42~1.2/include" -DNDEBUG  -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppArmadillo/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppProgress/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/stochvol/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppParallel/include'   -I"C:/RBuildTools/4.2/x86_64-w64-mingw32.static.posix/include"     -O2 -Wall  -mfpmath=sse -msse2 -mstackrealign  -c Bellman_FordRcpp.cpp -o Bellman_FordRcpp.o
+g++ -std=gnu++11  -I"C:/PROGRA~1/R/R-42~1.2/include" -DNDEBUG  -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppArmadillo/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppProgress/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/stochvol/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppParallel/include'   -I"C:/RBuildTools/4.2/x86_64-w64-mingw32.static.posix/include"     -O2 -Wall  -mfpmath=sse -msse2 -mstackrealign  -c DijkstraC.cpp -o DijkstraC.o
+g++ -std=gnu++11  -I"C:/PROGRA~1/R/R-42~1.2/include" -DNDEBUG  -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppArmadillo/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppProgress/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/stochvol/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppParallel/include'   -I"C:/RBuildTools/4.2/x86_64-w64-mingw32.static.posix/include"     -O2 -Wall  -mfpmath=sse -msse2 -mstackrealign  -c DijkstraRcpp.cpp -o DijkstraRcpp.o
+In file included from C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include/Rcpp/Vector.h:54,
+                 from C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include/Rcpp.h:40,
+                 from C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppArmadillo/include/RcppArmadillo.h:32,
+                 from DijkstraRcpp.cpp:1:
+C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include/Rcpp/vector/traits.h: In function 'void dijkstraRcpp(Rcpp::NumericMatrix, int, int)':
+C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include/Rcpp/vector/traits.h:46:47: warning: 'min_index' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   46 |   inline proxy ref(R_xlen_t i) { return start[i] ; }
+      |                                               ^
+DijkstraRcpp.cpp:29:24: note: 'min_index' was declared here
+   29 |     int min = INT_MAX, min_index;
+      |                        ^~~~~~~~~
+g++ -std=gnu++11  -I"C:/PROGRA~1/R/R-42~1.2/include" -DNDEBUG  -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/Rcpp/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppArmadillo/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppProgress/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/stochvol/include' -I'C:/Users/icoul/AppData/Local/R/win-library/4.2/RcppParallel/include'   -I"C:/RBuildTools/4.2/x86_64-w64-mingw32.static.posix/include"     -O2 -Wall  -mfpmath=sse -msse2 -mstackrealign  -c RcppExports.cpp -o RcppExports.o
+g++ -std=gnu++11 -shared -s -static-libgcc -o AlgorithmicDijkstra.dll tmp.def Bellman_FordRcpp.o DijkstraC.o DijkstraRcpp.o RcppExports.o -LC:/RBuildTools/4.2/x86_64-w64-mingw32.static.posix/lib/x64 -LC:/RBuildTools/4.2/x86_64-w64-mingw32.static.posix/lib -LC:/PROGRA~1/R/R-42~1.2/bin/x64 -lR
+installing to C:/Users/icoul/OneDrive/Bureau/c/M2Algorithmique/AlgorithmicDijkstra.Rcheck/00LOCK-ALGORI~1/00new/AlgorithmicDijkstra/libs/x64
+** R
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (AlgorithmicDijkstra)

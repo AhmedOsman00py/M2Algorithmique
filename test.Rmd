@@ -1,8 +1,8 @@
 ---
-title: "Test avec la version RCPP"
-author: "Dijkstra"
+title: "Test avec la version Rcpp et R"
+author: "Dijkstra & Bellman-Ford"
 date: '2023-02-05'
-output: html_document
+output: rmdformats::material
 ---
 
 ```{r setup, include=FALSE}
@@ -14,10 +14,10 @@ library(ggplot2)
 
 # Définition des fonctions
 
-
 ## bellmanFord
 
-#### En R
+### En R
+
 ```{r}
 
 BellmanFordR <- function(vertices, edges, start) {
@@ -77,7 +77,8 @@ BellmanFordR <- function(vertices, edges, start) {
 
 ```
 
-#### En Rcpp
+### En Rcpp
+
 ```{r}
 cppFunction('
 Rcpp::List bellmanFordRcpp(Rcpp::NumericMatrix adjacencyMatrix, int source){
@@ -122,10 +123,8 @@ Rcpp::List bellmanFordRcpp(Rcpp::NumericMatrix adjacencyMatrix, int source){
 )
 ```
 
-
-
-
 ## Dijkstra
+
 ```{r}
 cppFunction('
 void dijkstraRcpp(NumericMatrix graph, int source, int dest) { 
@@ -209,8 +208,7 @@ void dijkstraRcpp(NumericMatrix graph, int source, int dest) {
 ')
 ```
 
-
-#### En R
+### En R
 
 ```{r}
 dijkstraR <- function(graph_DataFrame, start_node){
@@ -286,8 +284,7 @@ dijkstraR <- function(graph_DataFrame, start_node){
 
 ```
 
-#### En Rcpp
-
+### En Rcpp
 
 ```{r}
 cppFunction('
@@ -344,10 +341,7 @@ List dijkstraC(NumericMatrix adjacency_matrix, int source) {
 
 ```
 
-
-
-#### Test des différentes fonctions en R et en Rcpp
-
+# Test des différentes fonctions en R et en Rcpp
 
 ## Données
 
@@ -368,7 +362,6 @@ matriceAdjacence
 
 ```
 
-
 ## Compilation
 
 ### Bellman Ford
@@ -377,21 +370,15 @@ matriceAdjacence
 BellmanFordR(c("1", "2", "3", "4", "5", "6", "7"), graph_DataFrame, "3")
 ```
 
-
 ```{r}
 bellmanFordRcpp(matriceAdjacence, 2)
 ```
 
-
-
 ### Dijkstra
-
-
 
 ```{r}
 dijkstraRcpp(matriceAdjacence, 2, 5)
 ```
-
 
 ```{r}
 dijkstraC(matriceAdjacence, 2)
@@ -401,10 +388,9 @@ dijkstraC(matriceAdjacence, 2)
 dijkstraR(graph_DataFrame,"3")
 ```
 
-
 ## Benchmark
 
-```{r}
+```{r warning=TRUE, include=FALSE}
 tm <- microbenchmark(BellmanFordR(c("1", "2", "3", "4", "5", "6", "7"), graph_DataFrame, "3"),
                      bellmanFordRcpp(matriceAdjacence, 2),
                      dijkstraC(matriceAdjacence, 2),
@@ -412,9 +398,12 @@ tm <- microbenchmark(BellmanFordR(c("1", "2", "3", "4", "5", "6", "7"), graph_Da
                      dijkstraR(graph_DataFrame,"3"))
 ```
 
-
 ```{r}
 autoplot(tm)
 ```
 
+### Interpretation
 
+-   Il faut noter que les versions en Rcpp sont appriori plus rapide que les versions en R.
+-   La version R de Bellman-Ford est plus rapide que la version R de Dijkstra
+-   Les versions Rcpp de Bellman-Ford et Dijkstra sont rélativement équivalente avec quelques microsecondes en moins pour Dijkstra.
