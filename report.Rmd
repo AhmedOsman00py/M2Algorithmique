@@ -1,6 +1,6 @@
 ---
-title: "Projet Algorithmique M2DS"
-author: "OSMAN Ahmed"
+title: "Projet Algorithmique M2DS - Dijkstra"
+author: "OSMAN Ahmed, HIMYCH Omar et COULIBALY Bourahima"
 date: "2023-01-22"
 output:
   pdf_document: default
@@ -10,9 +10,54 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(igraph)
+library(ggplot2)
 ```
 
-## Algorithme de *Bellman--Ford*
+# Sommaire
+
+### Introduction
+
+#### 1 - Algorithme de Bellman-Ford (solution naïve)
+
+-   1.1 Principe de l'algorithme
+
+-   1.2 Complexité
+
+-   1.3 Avantages et Inconvénients
+
+-   1.4 Implémentation de l'algorithme + exemples
+
+#### 2 - Algorithme de Dijkstra
+
+-   1.1 Principe de l'algorithme
+
+-   1.2 Complexité
+
+-   1.3 Avantages et Inconvénients
+
+-   1.4 Implémentation de l'algorithme + exemples
+
+## Introduction
+
+L'algorithme de Dijkstra est utilisé dans de nombreux domaines pour trouver le plus court chemin entre deux points dans un graphe pondéré.
+
+Voici quelques exemples d'utilisations courantes :
+
+-   **Réseaux de transport** : L'algorithme de Dijkstra est utilisé dans les systèmes de transport pour trouver le itinéraire le plus rapide entre deux gares ou aéroports. Il peut être utilisé pour trouver le chemin le plus court entre deux points sur un réseau ferroviaire ou pour planifier un itinéraire de vol en fonction des restrictions de temps et de distance.
+
+-   **Réseaux de communication** : Dans les réseaux informatiques, l'algorithme de Dijkstra peut être utilisé pour trouver le chemin le plus court pour transmettre des données d'un nœud à un autre. Par exemple, dans un réseau de télécommunication, l'algorithme peut être utilisé pour trouver le meilleur chemin pour transmettre des données d'un téléphone à un autre en utilisant le moins de ressources possible, telles que la bande passante.
+
+Dans un graphe, les nœuds représentent les points de connexion et les arêtes représentent les connections entre les nœuds. L'algorithme de Dijkstra trouve le chemin le plus court en utilisant les poids attribués aux arêtes pour évaluer la distance entre les nœuds.
+
+-   **Réseaux de transport** : Dans le cas d'un réseau de transport, les gares ou les aéroports peuvent être considérés comme des nœuds et les lignes de transport (trains, vols, etc.) peuvent être considérées comme des arêtes. L'algorithme peut trouver le meilleur itinéraire entre deux gares ou aéroports en utilisant les temps de voyage ou les coûts associés à chaque arête pour déterminer le chemin le plus rapide.
+
+-   **Réseaux de communication** : Dans le cas des réseaux de communication, les nœuds peuvent représenter les ordinateurs ou les équipements de réseau et les arêtes peuvent représenter les connexions physiques ou logiques entre les nœuds. L'algorithme peut être utilisé pour trouver le chemin le plus court entre deux nœuds en utilisant la bande passante disponible sur chaque arête pour déterminer le chemin le plus rapide pour transmettre les données.
+
+Optimisation de la livraison : Dans le cas de la livraison, les nœuds peuvent représenter les adresses de livraison et les arêtes peuvent représenter les routes entre les adresses. L'algorithme peut être utilisé pour trouver le meilleur itinéraire pour livrer des colis en utilisant le temps de conduite ou la distance entre les nœuds pour déterminer le chemin le plus rapide.
+
+En utilisant ces concepts de nœuds et d'arêtes, l'algorithme de Dijkstra peut être utilisé pour trouver le chemin le plus court dans un graphe pondéré pour résoudre divers problèmes dans différents domaines.
+
+## 1 - Algorithme de *Bellman--Ford*
 
 ### Principe de l'algorithme
 
@@ -45,7 +90,7 @@ En utilisant la notation de complexité, cela peut être exprimé comme $O(V^2 *
 
 #### Avantages
 
--   L\'algorithme de Bellman-Ford peut gérer des poids négatifs, contrairement à l'algorithme de Dijkstra qui ne peut gérer que des poids positifs.
+-   L'algorithme de Bellman-Ford peut gérer des poids négatifs, contrairement à l'algorithme de Dijkstra qui ne peut gérer que des poids positifs.
 
 -   Il peut détecter les cycles de poids négatifs dans un graphe, ce qui n'est pas possible avec l'algorithme de Dijkstra.
 
@@ -61,7 +106,7 @@ En utilisant la notation de complexité, cela peut être exprimé comme $O(V^2 *
 
 ### Implémentation de l'algorithme
 
-```{r}
+```{r echo=FALSE}
 BellmanFord <- function(vertices, edges, start) {
   
   # intialisation
@@ -118,51 +163,11 @@ BellmanFord <- function(vertices, edges, start) {
 }
 ```
 
-
-```{r, warning=FALSE}
-vertices <- c("r", "a", "b", "c")
-edges <- data.frame(from   = c("r", "a", "b", "c", "c"),
-                    to     = c("a", "b", "c", "r", "a"), 
-                    weight = c(3, 1, 2, 7, -4))
-
-# Create the graph
-g <- graph_from_data_frame(edges, 
-                           directed = TRUE)
-
-plot(g, 
-     edge.label=E(g)$weight, 
-     edge.label.cex=1, 
-     vertex.size = 25,
-     edge.arrow.size = 0.5)
-
-BellmanFord(vertices, edges, "r")
-```
-
-
-```{r}
-vertices <- c("r", "a", "b", "c", "d", "e", "f")
-edges <- data.frame(from   = c("r", "a", "b", "c", "c", "d", "e", "f", "d"),
-                    to     = c("a", "b", "c", "r", "a", "r", "b", "b", "e"), 
-                    weight = c(3, 1, 2, 7, 5, 6, 3, 10, 4))
-
-# Create the graph
-g <- graph_from_data_frame(edges, 
-                           directed = TRUE)
-
-plot(g, 
-     edge.label=E(g)$weight, 
-     edge.label.cex=1, 
-     vertex.size = 25, 
-     edge.arrow.size = 0.5)
-
-BellmanFord(vertices, edges, "r")
-```
-
 ```{r}
 vertices <- c("r", "A", "B", "C", "D", "E", "F")
 edges <- data.frame(from   = c("r", "r", "C", "C", "C", "C", "D", "E", "F", "F", "B"),
                     to     = c("A", "C", "A", "B", "D", "E", "E", "D", "E", "B", "A"),
-                    weight = c(7, 1, 1, 3, 1, 3, 1, 5, 5, 4, 4))
+                    weight = c(7, 1, 10, 3, 11, 3, 1, 5, 5, 4, 4))
 
 coords <- matrix(c(2, 2, # r
                    4, 0, # C
@@ -172,21 +177,6 @@ coords <- matrix(c(2, 2, # r
                    2, -2,
                    0, 0), byrow = TRUE, ncol = 2) 
 
-rescale_coords <- function(coords, scale_n) {
-  scale_matrix <- matrix(0, nrow = nrow(coords), ncol = ncol(coords))
-  
-  for (row in 1:nrow(coords)) {
-    for (col in 1:ncol(coords)) {
-      if (coords[row, col] < 0)
-        scale_matrix[row, col] <- coords[row, col] - scale_n
-      if (coords[row, col] > 0)
-        scale_matrix[row, col] <- coords[row, col] + scale_n
-    }
-  }
-  return(scale_matrix)
-}
-                     
-new_coords <- rescale_coords(coords, scale_n = 3)
 g <- graph_from_data_frame(edges, 
                            directed = TRUE)
 
@@ -195,7 +185,281 @@ plot(g,
      edge.label.cex=1, 
      vertex.size = 25, 
      edge.arrow.size = 0.5, 
-     layout=new_coords)
+     layout=coords)
 
 BellmanFord(vertices, edges, "r")
+```
+
+# --------- Omar
+
+## 2 - L'algorithm de Djikstra
+
+### 2.1 Principe de l'algorithme
+
+Dijkstra est un algorithme utilisé pour trouver le plus court chemin dans un graphe. Concrètement, on considère un certain nombre de noeuds et les arêtes entre eux, ainsi que la « longueur » des arêtes (appelée "poids"), l'algorithme construit le chemin le plus court entre le noeud de départ spécifié et tous les autres noeuds.
+
+Le principe de Dijkstra (greedy algorithm) consiste à examiner itérativement le noeud présentant la plus petite distance actuelle par rapport à la source et à mettre à jour tous les voisins non encore visités si le chemin vers celui-ci via le noeud actuel est plus court. Les étapes de l'algorithme sont expliquées ci-dessous :
+
+**1.** Initialiser la distance au noeud de départ à 0 et les autres distances à l'infini.\
+**2.** Labéliser tous les nouds comme "non visité".\
+**3.** Tant que nous n'ayons pas visité tous les nouds :\
+- Trouver le noud avec la distance la plus courte de la source (pour le premier essaie, ce sera le noud source lui-même).\
+- Pour tous les noeuds voisins que nous n'avons pas encore visités, vérifiez si la plus petite distance actuelle vers ce voisin est plus grande que si nous devions passer par le noud actuel.\
+- Si c'est le cas, la plus petite distance de ce voisin est mise à jour et correspond à la distance entre la source et le noeud actuel plus la distance entre le noud actuel et ce voisin.
+
+Le pseudo-code ci-dessous illustre les étapes de notre algorithme :
+
+```{r, echo=FALSE}
+dijkstra <- function(graph_DataFrame, start_node){
+
+  #assertions
+
+  if(is.element(F,graph_DataFrame[[3]] >0)==TRUE){
+    return(cat("\nWarning! - Edge's weight must be postive to apply Dijkstra"))}
+
+  stopifnot(is.data.frame(graph_DataFrame) && ncol(graph_DataFrame) == 3)
+  stopifnot(colnames(graph_DataFrame) == c("from", "to", "weight"))
+
+  stopifnot((is.numeric(graph_DataFrame[[1]]) && is.numeric(graph_DataFrame[[2]]))||(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])))
+  stopifnot((is.numeric(start_node)||is.character(start_node))&& length(start_node) == 1 && is.element(start_node, graph_DataFrame[[1]]))
+
+  # to make it universal, changing graph_DataFrame nodes to numeric
+  if(is.character(graph_DataFrame[[1]]) && is.character(graph_DataFrame[[2]])==TRUE){
+    graph_DataFrame[ , 1] <- ifelse(is.numeric(graph_DataFrame[ ,1]), graph_DataFrame[ ,1], lapply(graph_DataFrame[1], as.numeric))
+    graph_DataFrame[ , 2] <- ifelse(is.numeric(graph_DataFrame[ ,2]), graph_DataFrame[ ,2], lapply(graph_DataFrame[2], as.numeric))
+    start_node <- as.numeric(start_node)
+  }
+
+  # Vector of nodes to check
+  checkNode <- sort(unique(append(graph_DataFrame[ ,1],graph_DataFrame[ ,2])))
+
+  # Vector holds predecessor of each node, o for the start_node and nodes that we ca not
+  # visit from start_node
+
+  parentNode <- rep(NA,length(checkNode))
+
+  # Vector which holds distances to initial node
+  distanceNode<-  rep(Inf, length(checkNode))
+  names(distanceNode) <- checkNode
+
+
+  distanceNode[start_node] <- 0
+  while(length(checkNode) > 0){
+    #find node with lowest distance from node to check
+
+    nodeDistanceToCheck <- distanceNode[names(distanceNode) %in% checkNode]
+    node <- nodeDistanceToCheck[which.min(nodeDistanceToCheck)]
+
+    # extracting edges to be checked
+
+    nodeEdges <- graph_DataFrame[which(graph_DataFrame[ ,1] == names(node)), ]
+
+    # apply distances to distance vector
+
+    if(nrow(nodeEdges) > 0){ # to avoid wells
+
+    for (i in 1:nrow(nodeEdges)) {
+      if(distanceNode[nodeEdges[i, 2]] > node + nodeEdges[i, 3]){
+        distanceNode[nodeEdges[i, 2]] <- node + nodeEdges[i, 3]
+
+        parentNode[as.integer(nodeEdges[i,2])] = as.numeric(names(node))
+
+      }
+     }
+    }
+
+    #removing current node from list of nodes to be checked
+
+    checkNode <- checkNode[ -which(checkNode == names(node))]
+  }
+
+  solution <- list()
+  solution$distance <- unname(distanceNode)
+  solution$path  <- parentNode
+  return(solution)
+}
+```
+
+Finalement, le tableau que nous avons utilisé pour garder la trace de la plus courte distance actuelle entre la source et tous les autres nouds contiendra les distances (finales) les plus courtes. En plus, nous gardons la trace de prédécesseur de chaque nœud pour reconstruire le chemin.
+
+### 2.2 Exemples
+
+On cherche le plus court chemin de noeud source 3 à tous les autres dan sle graphe ci dessous:
+
+```{r}
+vertices <- 1:7
+from_ <- c(3, 3, 2, 2, 2, 2, 6, 1, 7, 7, 5)
+to_   <- c(4, 2, 4, 5, 6, 1, 1, 6, 1, 5, 4)  
+# --- Input avec Data Frame
+edges <- data.frame(from   = from_,
+                    to     = to_,
+                    weight = c(7, 1, 10, 3, 11, 3, 1, 5, 5, 4, 4)) 
+# --- pour le graph
+coords <- matrix(c(2, 2,
+                   4, 0, 
+                   6, 2, 
+                   8, 0, 
+                   6, -2, 
+                   2, -2,
+                   0, 0), byrow = TRUE, ncol = 2)
+g <- graph_from_data_frame(edges, 
+                           directed = TRUE)
+plot(g, 
+     edge.label=E(g)$weight, 
+     edge.label.cex=1, 
+     vertex.size = 25, 
+     edge.arrow.size = 0.5, 
+     layout = coords)
+```
+
+Start
+
+-   On visite 3 car c'est le minimun au début de l'algo.
+
+    Mise à jour de la distance du noeud 3 à 2
+
+    Mise à jour de la distance du noeud 3 à 4
+
+    supprimer 3 des Noeuds non visités: [1,2,4,5,6,7]
+
+    Mise à jour le parent de 2 et 4
+
+    Distances actuelles les plus petites: [Inf, 1, 0, 7, Inf, Inf, Inf]
+
+-   On visite 2 avec la distance actuelle 1 minimale au source.
+
+    Mise à jour de la distance du noeud 2 à 1
+
+    Mise à jour de la distance du noeud 2 à 5
+
+    Mise à jour de la distance du noeud 2 à 6
+
+    la distance de 2 à 4 reste la meme pas de relaxation
+
+    supprimer 2 des Noeuds non visités: [1,4,5,6,7]
+
+    Mise à jour le parent de 1,5 et 6
+
+    Distances actuelles les plus petites: [4,1,0,7,4,12,Inf]
+
+-   On visite 5 avec la distance actuelle 4 minimale au source.
+
+    la distance de 4 à 5 reste la meme pas de relaxation
+
+    supprimer 5 des Nouds non visités: [1,4,6,7]
+
+    Distances actuelles les plus petites: [4,1,0,7,4,12,Inf]
+
+-   On visite 1 avec la distance actuelle 4 minimale au source.
+
+    Mise à jour de la distance du noeud 1 à 6
+
+    supprimer 1 des Noeuds non visités: [4,6,7]
+
+    Mise à jour le parent de 6
+
+    Distances actuelles les plus petites: [4,1,0,7,4,9,Inf]
+
+-   On visite 4 avec la distance actuelle 7 minimale au source.
+
+    pas de voisins
+
+    supprimer 4 des Nouds non visités: [6,7]
+
+    Distances actuelles les plus petites: [4,1,0,7,4,9,Inf]
+
+-   On visite 6 avec la distance actuelle 9 minimale au source.
+
+    la distance de 6 à 1 reste la meme pas de relaxation
+
+    supprimer 6 des Nouds non visités: [7]
+
+    Distances actuelles les plus petites: [4,1,0,7,4,9,Inf]
+
+-   On visite 7 avec la distance actuelle Inf minimale au source.
+
+    pas de relaxation
+
+    supprimer 7 des Noeuds non visités: []
+
+    Distances actuelles les plus petites: **[4,1,0,7,4,9,Inf]**
+
+End
+
+Par conséquence les distances minimales de source à tous les noeuds **[4,1,0,7,4,9,Inf]**. Rétro-propagation permet de construire les chemins. Nous vérifions ce résultat par notre algorithme implémenté auparavant.
+
+```{r}
+dijkstra(edges,3)
+```
+
+### 2.2 Complexité :
+
+-   Min Heaps
+
+Un Min Heap est un arbre binaire complet dans lequel les nœuds enfants ont une valeur plus élevée (moins de priorité) que les nœuds parents, c'est-à-dire que tout chemin de la racine aux nœuds feuilles a un ordre croissant d'éléments. L'image ci dessous illustre un exemple de ce type arbre.
+
+![*Exemple de min heap*](Exemple.PNG)
+
+Les opérations d'insertion et de suppression modifient d'abord le tas pour le rendre conforme à la propriété de forme, en ajoutant ou en retirant de l'extrémité de Heap. Ensuite, la propriété de Heap est restaurée en parcourant le Heap vers le haut ou vers le bas. Les deux opérations prennent un temps $O(log n)$.
+
+Nous avons implémenté l'algorithme Dijkstra en se basant sur Min-heap. La complexité de temps d'exécution est : $O((V+E)logV)$ avec $V$ est le nombre des nœuds et $E$ est le nombre des arrêts dans un graphe connectés. En effet,
+
+-   Soit G=(V, E,w) un graphe pondéré et représenté comme une liste d'adjacence.
+-   La file d'attente prioritaire Q est représentée comme un heap binaire.
+
+1.  Il faut un temps $O(V)$ pour construire la file d'attente prioritaire initiale de $V$sommets.
+2.  Avec la représentation en liste d'adjacence, tous les sommets du graphe peuvent être traversés en utilisant BFS. Par conséquent, l'itération sur tous les voisins des sommets et la mise à jour de leurs valeurs de dist au cours d'une exécution de l'algorithme prennent $O(E)$ temps.
+3.  Le temps nécessaire à chaque itération de la boucle est de $O(V)$, car un sommet est retiré de $Q$ par boucle.
+4.  La structure de données du tas binaire nous permet d'extraire-min (enlever le nœud avec la dist minimale) et de mettre à jour un élément (recalculer dist[u]) en $O(logV)$ temps.
+5.  Par conséquent, la complexité temporelle devient $O(V) + O(Elog|V|) + O(|V|log|V|)$, qui est $O((|E|+|V|)log|V|) = O(|E|log|V|)$.
+
+G un graphe connecté. $E=\frac{(V-1)V}{2}$ donc E est $O(V^2)$ on pourra écrire la complexité comme $O(V^2log(V))$.
+
+## 2. Simulation et implimentation :
+
+Cette partie est dédié à simuler les deux algorithmes (Bellman Ford et Dijkstra) que nous avons implémenté sous $R$ et sous $C++$. Premièrement, on va illustrer la complexité de chaque algorithme sur des graphes générés par le modèle d'ErdosRenyi qui tire les arrêtes de manière indépendante et avec la même probabilité $p = 0.6$. Ensuite, nous allons comparer le temps calcul entre $C++$ et $R$.
+
+### 2.1 La Complexité :
+
+D'après le calcul théorique de la partie précédente, nous avons montré que la complexité en temps d'exécution de Bellman Ford peut s'écrire comme $O(V^3)$ et Dijkstra comme $O(V^2log(V))$ avec $V$ est le nombre des noeuds dans le graphe.
+
+Donc, la complexité est décrite dans l'échelle logarithmique par l'équation : $$\text{Bellman Ford :  } 3log(V))$$ $$\text{Dijkstra :  } 2log(V)+log(log(V)))$$
+
+En plus, le modèle générative de graphe est ErdosRenyi avec une probabilité $p=0.6$,autrement dit chaque arête possible entre les sommets apparaît avec probabilité $p$, indépendamment des autres arêtes.
+
+$G(V,0.6)$ est le graphe dont la matice adjacence $X_{i j}= \begin{cases}1 & \text { si }\{i, j\} \text { est une arête de } G, \\ 0 & \text { sinon }\end{cases}$
+
+avec, $\mathbb{P}\left[X_{i j}=1\right]=1-\mathbb{P}\left[X_{i j}=0\right]=p$
+
+Donc, nous gardons toujours les mêmes chances en changeant le nombre des nœuds $V\in [10,20,30,40,50,....,300]$. Nous effectuons 30 simulations pour chaque $V$, ensuite en moyennant les résultats on trouve les figues suivants :
+
+-   Bellman Ford
+
+```{r}
+Mydata <- read_delim("Mydata2.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE, show_col_types = FALSE)
+
+mydata_simulation <- data.frame(log_vertex=log(c(1:30)*10),log_time=log(rowMeans(mydata)))
+
+lm_dijkstra=lm(log_time~ log_vertex,data=mydata_simulation)
+
+ggplot(data=mydata_simulation, aes(x=log_vertex, y=log_time)) + geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) + geom_point(shape=17, fill="black", color="darkred", size=3)+
+  stat_smooth(method = "lm", se=F) #+ theme_minimal()
+```
+
+-   Dijkstra
+
+```{r}
+mydata <- read_csv("Mydata.csv")
+mydata <- mydata[, -1]
+
+mydata_simulation <- data.frame(log_vertex=log(c(1:30)*10),log_time=log(rowMeans(mydata)))
+
+lm_dijkstra=lm(log_time~ log_vertex,data=mydata_simulation)
+lm_dijkstra$coefficients
+
+ggplot(data=mydata_simulation, aes(x=log_vertex, y=log_time)) + geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) + geom_point(shape=17, fill="black", color="darkred", size=3)+
+  stat_smooth(method = "lm",se=F) + theme_minimal()
 ```
