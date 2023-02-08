@@ -235,6 +235,61 @@ G un graphe connecté. $E=\frac{(V-1)V}{2}$  donc  E est $O(V^2)$
 on pourra écrire la complexité comme $ O(V^2log(V))$.
 
 
+## 2. Simulation et implimentation :
+
+Cette partie est dédié à simuler les deux algorithmes (Bellman Ford et Dijkstra) que nous avons implémenté sous $R$ et sous $C++$. Premièrement, on va illustrer la complexité de chaque algorithme sur des graphes générés par le modèle d’ErdosRenyi qui tire les arrêtes de manière indépendante et avec la même probabilité $p = 0.6$. Ensuite, nous allons comparer le temps calcul entre $C++$ et $R$.
+
+### 2.1  La Complexité :
+
+D’après le calcul théorique de la partie précédente, nous avons montré que la complexité en temps d’exécution de Bellman Ford peut s’écrire comme $O(V^3)$ et Dijkstra comme $O(V^2log(V))$ avec $V$ est le nombre des noeuds dans le graphe.
+
+Donc, la complexité est décrite dans l’échelle logarithmique par l’équation :
+$$\text{Bellman Ford :  } 3log(V))$$
+$$\text{Dijkstra :  } 2log(V)+log(log(V)))$$
+
+En plus, le modèle générative de graphe est ErdosRenyi avec une probabilité $p=0.6$,autrement dit chaque arête possible entre les sommets  apparaît avec
+probabilité $p$, indépendamment des autres arêtes.
+
+$G(V,0.6)$ est le graphe dont la matice adjacence $X_{i j}= \begin{cases}1 & \text { si }\{i, j\} \text { est une arête de } G, \\ 0 & \text { sinon }\end{cases}$
+
+avec, $\mathbb{P}\left[X_{i j}=1\right]=1-\mathbb{P}\left[X_{i j}=0\right]=p$
+
+Donc, nous gardons toujours les mêmes chances en changeant le nombre des nœuds $V\in [10,20,30,40,50,....,300]$. Nous effectuons 30 simulations pour chaque $V$, ensuite en moyennant les résultats on trouve les figues suivants :
+
+* Bellman Ford
+```{r}
+Mydata <- read_delim("Mydata2.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE,show_col_types = FALSE)
+
+mydata_simulation <- data.frame(log_vertex=log(c(1:30)*10),log_time=log(rowMeans(mydata)))
+
+lm_dijkstra=lm(log_time~ log_vertex,data=mydata_simulation)
+
+ggplot(data=mydata_simulation, aes(x=log_vertex, y=log_time)) + geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) + geom_point(shape=17, fill="black", color="darkred", size=3)+
+  stat_smooth(method = "lm",se=F) #+ theme_minimal()
+```
+
+
+
+
+* Dijkstra 
+
+```{r}
+Mydata <- read_delim("Mydata.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE,show_col_types = FALSE)
+
+mydata_simulation <- data.frame(log_vertex=log(c(1:30)*10),log_time=log(rowMeans(mydata)))
+
+lm_dijkstra=lm(log_time~ log_vertex,data=mydata_simulation)
+
+ggplot(data=mydata_simulation, aes(x=log_vertex, y=log_time)) + geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) + geom_point(shape=17, fill="black", color="darkred", size=3)+
+  stat_smooth(method = "lm",se=F) #+ theme_minimal()
+
+```
+
+
 
 
 
